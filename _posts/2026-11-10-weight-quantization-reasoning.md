@@ -28,7 +28,7 @@ Whatever lets a model keep an argument straight lives in the fine differences be
 
 Models are usually trained in BF16 (bfloat16, short for "brain floating point") or FP16 (standard 16-bit floating point). BF16 spends 1 bit on the sign, 8 on the exponent and 7 on the mantissa, and that exponent lets it represent tiny and huge values with roughly the same *relative* precision. Integer formats don't have one, so INT8 and INT4 (8-bit and 4-bit integers) are evenly spaced grids of 256 and 16 values. FP8 sits in between; its E4M3 variant uses 4 exponent bits and 3 mantissa bits.
 
-![Bit layouts of FP32, BF16, FP16, FP8 (E4M3), INT8 and INT4, colour-coded by sign, exponent, mantissa and integer bits, with bytes per weight and the weight memory of a 70B model in each format]({{ '/assets/blog/weight-quantization-reasoning/number-formats.png' | relative_url }})
+![Bit layouts of FP32, BF16, FP16, FP8 (E4M3), INT8 and INT4, colour-coded by sign, exponent, mantissa and integer bits, with bytes per weight and the weight memory of a 70B model in each format]({{ '/assets/blog/weight-quantization-reasoning/number-formats.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 Quantizing a tensor means picking a grid and snapping every weight to its nearest point. Symmetric absmax (absolute-maximum) quantization, the simplest scheme, sets the step size $$\Delta$$ from the largest weight on the grid:
 
@@ -40,7 +40,7 @@ $$|w_i - \hat w_i| \le \frac{\Delta}{2}$$
 
 Hold on to that inequality, because it's the whole cost model. Precision lost scales with $$\Delta$$, $$\Delta$$ is set by the largest value on the grid, and going from 8 to 4 bits makes $$\Delta$$ about 18 times bigger.
 
-![Sixty weights on a number line snapping onto a symmetric quantization grid as the bit width drops from 8 to 4 to 2 bits; the yellow rounding errors lengthen and at 2 bits most weights collapse onto 0]({{ '/assets/blog/weight-quantization-reasoning/quant-grid-snap.gif' | relative_url }})
+![Sixty weights on a number line snapping onto a symmetric quantization grid as the bit width drops from 8 to 4 to 2 bits; the yellow rounding errors lengthen and at 2 bits most weights collapse onto 0]({{ '/assets/blog/weight-quantization-reasoning/quant-grid-snap.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 One more choice: how many weights share a $$\Delta$$. Per-tensor uses one scale for the whole matrix and per-channel one per output row. Group-wise, the default for 4-bit LLM weights, gives each block of $$g$$ weights its own scale (usually $$g = 128$$) for 0.125 extra bits per weight. Dettmers & Zettlemoyer found small block sizes were one of only two changes that reliably improved the bits-versus-accuracy trade-off.
 
@@ -115,7 +115,7 @@ ax.legend(); plt.show()
 INT8: levels=235  Δ=0.00079  max|err|=0.00039 <= Δ/2=0.00039: True  MSE=5.16e-08
 INT4: levels= 15  Δ=0.01428  max|err|=0.00714 <= Δ/2=0.00714: True  MSE=1.70e-05
 ```
-![Output of cell 2]({{ '/assets/blog/weight-quantization-reasoning/cell-02-out-1.png' | relative_url }})
+![Output of cell 2]({{ '/assets/blog/weight-quantization-reasoning/cell-02-out-1.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 Two small functions do the work. `quantize` sets each group's step $$\Delta$$ (`scale` in the code) to the group's largest absolute value divided by the largest code (127 for INT8, 7 for INT4), then rounds every weight to an integer code $$q$$. `fake_quant` multiplies the codes back by the step to get $$\hat w$$. The rest of the cell quantizes a 512 × 2048 matrix drawn from $$\mathcal N(0, 0.02^2)$$, a typical scale for LLM weights, to INT8 and INT4, prints the levels used, step size, largest error and MSE (mean squared error) for each, and plots the original weights against the INT4 values.
 
@@ -129,7 +129,7 @@ Why should an error that small matter? A dot product sums thousands of those $$\
 
 Real LLM numbers aren't well-behaved Gaussians. [Dettmers et al. (2022)](https://arxiv.org/abs/2208.07339) found that by roughly 6.7B parameters, a handful of hidden dimensions carry "emergent outlier features" in every layer: values far larger than the rest that dominate attention and the model's predictions. Since $$\Delta$$ is set by the largest value on the grid, an outlier $$k$$ times bigger than its neighbours makes $$\Delta$$ roughly $$k$$ times bigger, and once $$\Delta/2$$ exceeds a typical weight, nearly everything rounds to zero. Strictly, those features live in the *activations*. W4A16 (4-bit weights, 16-bit activations) lets them pass straight through, while W8A8 (8-bit weights and activations) has to quantize them. Weights have milder outliers of their own, and the arithmetic is identical.
 
-![One weight grows into an outlier from 0.05 to 1.0; the INT4 grid step widens from 0.007 to 0.14 and the share of ordinary weights rounded to 0 climbs from 22% to 100%]({{ '/assets/blog/weight-quantization-reasoning/outlier-stretch.gif' | relative_url }})
+![One weight grows into an outlier from 0.05 to 1.0; the INT4 grid step widens from 0.007 to 0.14 and the share of ordinary weights rounded to 0 climbs from 22% to 100%]({{ '/assets/blog/weight-quantization-reasoning/outlier-stretch.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 Cell 3 plants an artificial outlier and measures the damage.
 
@@ -170,7 +170,7 @@ clean, per-tensor INT4           Δ=0.0143  ordinary weights -> 0:  27.9%  MSE=1
 outlier, per-tensor INT4         Δ=0.2148  ordinary weights -> 0: 100.0%  MSE=4.01e-04
 outlier, group-wise INT4 (g=128) Δ=0.0081  ordinary weights -> 0:  19.0%  MSE=1.57e-05
 ```
-![Output of cell 3]({{ '/assets/blog/weight-quantization-reasoning/cell-03-out-1.png' | relative_url }})
+![Output of cell 3]({{ '/assets/blog/weight-quantization-reasoning/cell-03-out-1.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 The setup is deliberately crude: take the matrix from cell 2 and multiply one input column (column 7) by 20 to stand in for an outlier channel. A `report` helper then looks only at the other, ordinary weights and prints the step size, the share rounded to exactly zero and the MSE for three setups: clean per-tensor INT4, per-tensor INT4 with the outlier, and group-wise INT4 ($$g = 128$$) with the outlier. Two bar charts put them side by side.
 
@@ -212,7 +212,7 @@ ax.legend(); plt.show()
 INT8 (g=128) relative error: layer 1 = 0.006, layer 12 = 0.023, layer 24 = 0.032
 INT4 (g=128) relative error: layer 1 = 0.115, layer 12 = 0.393, layer 24 = 0.477
 ```
-![Output of cell 4]({{ '/assets/blog/weight-quantization-reasoning/cell-04-out-1.png' | relative_url }})
+![Output of cell 4]({{ '/assets/blog/weight-quantization-reasoning/cell-04-out-1.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 Our stand-in for a model is a stack of 24 random 512 × 512 layers. They use He initialization (weights scaled by the square root of 2 over the layer width, which keeps activations a stable size). `run_stack` pushes 64 random inputs through them. Each layer is a matrix multiply followed by ReLU (rectified linear unit, which zeroes negative values). The cell runs the stack with full-precision, group-wise INT8 and group-wise INT4 weights, prints the relative error at layers 1, 12 and 24, and plots it for every layer.
 
@@ -244,13 +244,13 @@ per-step accuracy 0.99: n= 5 -> 95.1%  n=10 -> 90.4%  n=20 -> 81.8%  n=40 -> 66.
 per-step accuracy 0.97: n= 5 -> 85.9%  n=10 -> 73.7%  n=20 -> 54.4%  n=40 -> 29.6%
 per-step accuracy 0.95: n= 5 -> 77.4%  n=10 -> 59.9%  n=20 -> 35.8%  n=40 -> 12.9%
 ```
-![Output of cell 5]({{ '/assets/blog/weight-quantization-reasoning/cell-05-out-1.png' | relative_url }})
+![Output of cell 5]({{ '/assets/blog/weight-quantization-reasoning/cell-05-out-1.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 This one is pure arithmetic: the formula above for per-step accuracies of 99%, 97% and 95% at 5, 10, 20 and 40 steps, plus a plot of all three curves up to 40 steps.
 
 At 99% per step, a 20-step chain is right 81.8% of the time. At 97%, only 54.4%. Two points lost per step become 27 points over 20 steps, and the curves keep pulling apart as chains get longer. Real steps aren't independent, but this is how one quantized model can look fine on short benchmarks and worse at long maths and code.
 
-![Two 20-step reasoning chains: at 99% per-step accuracy the whole chain is right 82% of the time, at 97% only 54%]({{ '/assets/blog/weight-quantization-reasoning/chain-compounding.png' | relative_url }})
+![Two 20-step reasoning chains: at 99% per-step accuracy the whole chain is right 82% of the time, at 97% only 54%]({{ '/assets/blog/weight-quantization-reasoning/chain-compounding.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 ### What the evidence says
 
@@ -299,7 +299,7 @@ No plot this time, just a table. The cell takes an NVIDIA H100 SXM (the server-m
 
 Look at the 70B rows. In FP16 the model needs 140.0 GB and doesn't fit; in INT4 it needs 36.1 GB, leaves room for the KV cache, and its ceiling rises from 24 to 93 tokens/s. So on one card, your realistic options are a 13B model at full precision (26.0 GB) or a 70B model at 4 bits.
 
-![Three 80 GB GPUs: a 13B FP16 model uses 26 GB, a 70B INT4 model uses 36 GB, and a 70B FP16 model at 140 GB overflows the card]({{ '/assets/blog/weight-quantization-reasoning/scale-bet.png' | relative_url }})
+![Three 80 GB GPUs: a 13B FP16 model uses 26 GB, a 70B INT4 model uses 36 GB, and a 70B FP16 model at 140 GB overflows the card]({{ '/assets/blog/weight-quantization-reasoning/scale-bet.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 Which should you pick? Across more than 35,000 experiments on models from 19M to 176B parameters, holding total model bits fixed, Dettmers & Zettlemoyer found 4-bit precision "almost universally optimal" for zero-shot accuracy (accuracy on tasks the model wasn't given examples for). The bigger, coarser model usually wins, because the rounding noise costs less than the extra parameters buy you.
 
@@ -314,7 +314,7 @@ The cheapest way to make the bet is PTQ: quantize a finished 16-bit model, usual
 
 SmoothQuant and the rotation methods are what handle activation outliers; QAT of the weights alone leaves them in place. PTQ's real limitation is that the model never sees its own rounding error. At 8 bits or W4A16 that rarely matters. Below that, especially on long reasoning, it does.
 
-![Two pipelines: PTQ calibrates and rounds a finished BF16 model to INT4, while QAT trains with fake-quantized weights, straight-through gradients and FP32 master weights before exporting INT4]({{ '/assets/blog/weight-quantization-reasoning/ptq-vs-qat.png' | relative_url }})
+![Two pipelines: PTQ calibrates and rounds a finished BF16 model to INT4, while QAT trains with fake-quantized weights, straight-through gradients and FP32 master weights before exporting INT4]({{ '/assets/blog/weight-quantization-reasoning/ptq-vs-qat.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 ### Quantization-aware training: the frontier
 
@@ -324,9 +324,9 @@ QAT puts the rounding inside the training loop ([Jacob et al., 2017](https://arx
 2. It passes the gradient straight through the rounding. `round()` has zero gradient almost everywhere, so the straight-through estimator, or STE ([Bengio et al., 2013](https://arxiv.org/abs/1308.3432)), treats it as the identity, $$\partial \hat w / \partial w \approx 1$$, and applies the gradient for $$\hat w$$ to $$w$$.
 3. It updates the master weights, which drift in full precision until they cross a rounding boundary and, over training, settle into values that survive the grid.
 
-![The forward pass uses the INT3 staircase while the backward pass uses the straight-through estimator, a gradient of 1 everywhere, instead of the true gradient of 0]({{ '/assets/blog/weight-quantization-reasoning/qat-ste.gif' | relative_url }})
+![The forward pass uses the INT3 staircase while the backward pass uses the straight-through estimator, a gradient of 1 everywhere, instead of the true gradient of 0]({{ '/assets/blog/weight-quantization-reasoning/qat-ste.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
-![A full-precision master weight climbs from 0.10 to 0.385 under straight-through gradient steps while its deployed quantized copy jumps from 0 to 0.25 to 0.5 and the loss drops to zero]({{ '/assets/blog/weight-quantization-reasoning/qat-master-weights.gif' | relative_url }})
+![A full-precision master weight climbs from 0.10 to 0.385 under straight-through gradient steps while its deployed quantized copy jumps from 0 to 0.25 to 0.5 and the loss drops to zero]({{ '/assets/blog/weight-quantization-reasoning/qat-master-weights.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 Does it help? Cell 7 compares PTQ and QAT head to head.
 
@@ -391,7 +391,7 @@ FP32 baseline                          test MSE = 0.0031   (1.0x baseline)
 PTQ INT4 (round after training)        test MSE = 0.0294   (9.5x baseline)
 QAT INT4 (STE, fake-quant in loop)     test MSE = 0.0052   (1.7x baseline)
 ```
-![Output of cell 7]({{ '/assets/blog/weight-quantization-reasoning/cell-07-out-1.png' | relative_url }})
+![Output of cell 7]({{ '/assets/blog/weight-quantization-reasoning/cell-07-out-1.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 This is the longest snippet and the slowest, at 10 to 20 seconds. It builds a toy regression task (targets from a small random "teacher" network, with 1,536 training and 512 test examples) and a student MLP (multi-layer perceptron) with layers of 8, 64, 64 and 1 units and tanh (hyperbolic tangent) activations. The student is trained twice from the same starting weights, for 800 steps of the Adam optimizer: once in full precision, and once with QAT, using fake-quantized INT4 weights and the STE. Then the cell tests the float model, that model rounded to INT4 (PTQ), and the QAT model.
 
@@ -452,13 +452,13 @@ mixed bits per layer:          [8, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 8] avg = 4.00
 uniform INT4 output error = 0.157
 mixed    (avg 4 bits)     = 0.116
 ```
-![Output of cell 8]({{ '/assets/blog/weight-quantization-reasoning/cell-08-out-1.png' | relative_url }})
+![Output of cell 8]({{ '/assets/blog/weight-quantization-reasoning/cell-08-out-1.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 The toy here is shaped like a transformer: an input projection ("emb"), ten middle blocks that each add a 0.2-scaled ReLU update to a running hidden state, and an output projection ("head"). `stack_error` quantizes chosen layers group-wise and returns the final output's relative error. The cell pushes one layer at a time to INT3 to measure sensitivity, then gives INT8 to the two most sensitive layers, INT4 to the next two and INT3 to the rest, an average of exactly 4 bits ($$2 \times 8 + 2 \times 4 + 8 \times 3 = 12 \times 4$$). It prints the results and plots each layer's sensitivity, coloured by its bits.
 
 The sensitivities tell the story. "emb" scores 0.183 and "head" 0.287, against 0.035 to 0.050 for the middle blocks, so the scan finds the input and output projections without being told. The allocation comes out as [8, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 8], averaging 4.00. Uniform INT4 gives an output error of 0.157; the mixed allocation gives 0.116, about 26% less for the same memory. In this toy the sensitivity comes purely from where a layer sits; real models have to be measured one by one, but the method is the same.
 
-![A 32-block transformer coloured by bit width: embedding and LM head at BF16 or FP8 on the residual stream's direct path, blocks 1-2 and 31-32 at INT8, and the middle blocks at INT4 or INT3]({{ '/assets/blog/weight-quantization-reasoning/mixed-precision-map.png' | relative_url }})
+![A 32-block transformer coloured by bit width: embedding and LM head at BF16 or FP8 on the residual stream's direct path, blocks 1-2 and 31-32 at INT8, and the middle blocks at INT4 or INT3]({{ '/assets/blog/weight-quantization-reasoning/mixed-precision-map.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 ## Other methods in brief
 
@@ -474,7 +474,7 @@ The model stores the attention keys and values for every token it has seen. On l
 
 On laptops and phones memory is the hard limit, so 4-bit is the default. GGUF, the model file format used by llama.cpp, holds formats like the q4_K_M from the top of this post, mostly made with PTQ. QAT checkpoints are arriving too: Gemma 3's QAT models ship as Q4_0 GGUFs (llama.cpp's basic 4-bit format), and Meta's quantized Llama 3.2 targets phones with a reported 56% smaller model and 2 to 4× faster inference.
 
-![Three deployment tiers from most to fewest bits: cloud APIs with FP8 and FP4, self-hosted INT4 GPTQ or AWQ, and on-device GGUF Q4 and QAT checkpoints, with KV-cache quantization at every tier]({{ '/assets/blog/weight-quantization-reasoning/deployment-spectrum.png' | relative_url }})
+![Three deployment tiers from most to fewest bits: cloud APIs with FP8 and FP4, self-hosted INT4 GPTQ or AWQ, and on-device GGUF Q4 and QAT checkpoints, with KV-cache quantization at every tier]({{ '/assets/blog/weight-quantization-reasoning/deployment-spectrum.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 ## Try it yourself, and what to take away
 

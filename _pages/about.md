@@ -6,7 +6,7 @@ subtitle: Machine Learning Researcher at SapientPriors, Bangalore.
 
 profile:
   align: right
-  image: prof_pic.jpg
+  image: neelesh_iit_roorkee.jpg
   image_circular: false # crops the image to make it circular
   more_info: >
     <p>Bangalore, India</p>

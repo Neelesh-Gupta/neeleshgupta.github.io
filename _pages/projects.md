@@ -1,6 +1,6 @@
 ---
 layout: page
-title: projects
+title: Projects
 permalink: /projects/
 description: research and engineering work, from cryo-ET segmentation to power-grid learning.
 nav: true

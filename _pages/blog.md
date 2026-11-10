@@ -1,7 +1,7 @@
 ---
 layout: default
 permalink: /blog/
-title: blog
+title: Blog
 nav: true
 nav_order: 1
 pagination:
@@ -103,7 +103,7 @@ pagination:
 
 {% if site.posts.size == 0 %}
 
-  <p class="text-center mt-5">The first posts are on their way. Subscribe via <a href="{{ '/feed.xml' | relative_url }}">RSS</a> to get notified.</p>
+  <p class="text-center mt-5">The first posts are on their way.</p>
   {% endif %}
 
   <ul class="post-list">

@@ -111,7 +111,7 @@ max_width: 930px
 # see https://schema.org/docs/faq.html for more information
 serve_og_meta: true # Include Open Graph meta tags in the HTML head
 serve_schema_org: true # Include Schema.org in the HTML head
-og_image: https://neelesh-gupta.github.io/neeleshgupta.github.io/assets/img/prof_pic.png # The site-wide (default for all links) Open Graph preview image
+og_image: https://neelesh-gupta.github.io/neeleshgupta.github.io/assets/img/prof_pic.jpg # The site-wide (default for all links) Open Graph preview image
 
 # -----------------------------------------------------------------------------
 # Analytics and search engine verification
@@ -135,7 +135,7 @@ bing_site_verification: # out your bing-site-verification ID (Bing Webmaster)
 # Blog
 # -----------------------------------------------------------------------------
 
-blog_name: blog # blog_name will be displayed in your blog page
+blog_name: Blog # blog_name will be displayed in your blog page
 blog_description: notes on machine learning research, papers and the ideas behind them
 permalink: /blog/:year/:title/
 lsi: false # produce an index for related posts

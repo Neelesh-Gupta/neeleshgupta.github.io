@@ -1,13 +1,13 @@
 ---
 layout: about
-title: about
+title: About
 permalink: /
 subtitle: Machine Learning Researcher at SapientPriors, Bangalore.
 
 profile:
   align: right
-  image: prof_pic.png
-  image_circular: true # crops the image to make it circular
+  image: prof_pic.jpg
+  image_circular: false # crops the image to make it circular
   more_info: >
     <p>Bangalore, India</p>
     <p>B.Tech, NIT Kurukshetra '26</p>

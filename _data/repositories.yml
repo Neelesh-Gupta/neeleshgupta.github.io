@@ -1,14 +1,12 @@
 github_users:
-  - torvalds
-  - alshedivat
+  - Neelesh-Gupta
 
 repo_description_lines_max: 2
 
 github_repos:
-  - alshedivat/al-folio
-  - jekyll/jekyll
-  - twbs/bootstrap
-  - jquery/jquery
-  - FortAwesome/Font-Awesome
-  - mathjax/MathJax
-  - jpswalsh/academicons
+  - Neelesh-Gupta/DDPM-Flowers
+  - Neelesh-Gupta/Vision-Transformer-ViT-for-Autonomous-UAV-Perception
+  - Neelesh-Gupta/Motion-Compensated-Tracking-Pipeline
+  - Neelesh-Gupta/DCOPF-Problem
+  - Neelesh-Gupta/YOLO-Object-Detection
+  - Neelesh-Gupta/Information-Retrieval-using-LLM

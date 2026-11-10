@@ -1,189 +1,146 @@
 cv:
-  name: Albert Einstein
-  label: Scientist
-  email: einstein@example.com
-  location: Princeton, NJ
+  name: Neelesh Gupta
+  label: Machine Learning Researcher
+  email: neeleshgupta399@gmail.com
+  location: Bangalore, India
   image: ""
-  summary: A German-born theoretical physicist, widely ranked among the greatest and most influential scientists of all time
+  summary: Machine Learning Researcher specializing at the intersection of Computer Vision, Geometric Deep Learning, and AI for Science applied to complex physical and biological systems, currently developing continual learning agents.
 
   social_networks:
-    - network: X
-      username: AlbertEinstein
     - network: GitHub
-      username: example
+      username: Neelesh-Gupta
     - network: LinkedIn
-      username: example
-
-  address:
-    street: 2712 Broadway St
-    city: San Francisco
-    region: California
-    postalCode: CA 94115
-    countryCode: US
+      username: neelesh-gupta-92b2bb2b5
 
   sections:
     Education:
-      - institution: University of Zurich
-        location: Zurich, Switzerland
-        url: https://www.uzh.ch/
-        area: Physics
-        studyType: PhD
-        start_date: 1900
-        end_date: 1905
-        score: ""
-        courses: "Theory of Relativity"
-        highlights:
-          - Description 1.
-          - Description 2.
+      - institution: National Institute of Technology, Kurukshetra
+        location: Kurukshetra, India
+        url: https://nitkkr.ac.in/
+        area: Electrical Engineering
+        studyType: B.Tech
+        start_date: 2022-11
+        end_date: 2026-05
+        score: "CGPA: 7.04/10.00"
 
-      - institution: Eidgenössische Technische Hochschule
-        location: Zurich, Switzerland
-        area: Physics
-        studyType: Federal teaching diploma
-        start_date: 1896
-        end_date: 1900
-        highlights:
-          - Description 1.
-          - Description 2.
+      - institution: Don Bosco Park Circus
+        location: Kolkata, India
+        area: Indian School Certificate (ISC)
+        studyType: 12th Standard
+        start_date: 2019-05
+        end_date: 2021-03
+        score: "90.75%"
+
+      - institution: Don Bosco Park Circus
+        location: Kolkata, India
+        area: Indian Certificate of Secondary Education (ICSE)
+        studyType: 10th Standard
+        start_date: 2017-05
+        end_date: 2019-03
+        score: "91.6%"
 
     Experience:
-      - company: Institute for Advanced Study, Princeton University
-        position: Professor of Theoretical Physics
-        location: Princeton University, NJ
-        start_date: 1933
-        end_date: 1955
-        summary: Teaching at Palmer Physical Laboratory (now 302 Frist Campus Center). While not a professor at Princeton, I associated with the physics professors and continued to give lectures on campus.
+      - company: SapientPriors
+        position: Machine Learning Researcher
+        location: Bangalore, India
+        start_date: 2026-08
         highlights:
-          - Relativity
-          - Description 2.
+          - Conducting foundational research and developing models in continual learning paradigms to build highly adaptable, autonomous AI agents for enterprise environments.
 
-      - company: California Institute of Technology
-        position: Visiting Professor
-        location: Pasadena, California, US
-        start_date: 1933
-        end_date: 1933
+      - company: Indian Institute of Technology Roorkee
+        position: Undergraduate Researcher
+        location: Roorkee, India
+        start_date: 2026-01
+        end_date: 2026-06
+        summary: "Advisor: Dr. Parikshit Pareek"
         highlights:
-          - Description 1.
-          - Description 2.
+          - Designed a hybrid neural architecture with differentiable power-balance and reserve-repair layers enforcing 100% feasibility of grid constraints; encoded spatial structure via Graph Laplacian eigenvectors and extracted Locational Marginal Prices through a KKT-based module.
+          - "[Certificate](https://drive.google.com/file/d/1PYZQS5F4XcyLRABduNDcewaJg1GgNBnB/view?usp=sharing)"
 
-      - company: Kaiser Wilhelm Institute for Physics
-        position: Director
-        location: Berlin, Germany
-        start_date: 1917
-        end_date: 1933
-
-      - company: Karl-Ferdinand University
-        position: Professor of Theoretical Physics
-        location: Prague, Czechoslovakia
-        start_date: 1911
-        end_date: 1917
-
-      - company: University of Zurich
-        position: Associate Professor of Theoretical Physics
-        location: Zurich, Switzerland
-        start_date: 1909
-        end_date: 1911
-
-    Volunteer:
-      - company: People's Climate March
-        position: Lead Organizer
-        location: Zurich, Switzerland
-        start_date: 2014-04-01
-        end_date: 2015-07-01
-        summary: Lead organizer for the New York City branch of the People's Climate March, the largest climate march in history.
+      - company: Carnegie Mellon University
+        position: Undergraduate Researcher
+        location: Pittsburgh, USA
+        start_date: 2025-05
+        end_date: 2026-02
+        summary: "Advisors: Dr. Min Xu, Dr. Xingjian Li"
         highlights:
-          - "Awarded 'Climate Hero' award by Greenpeace for my efforts organizing the march."
-          - "Men of the year 2014 by Time magazine"
+          - Designed TopoFuse, a 3D volumetric segmentation framework that maps 2D features from a fine-tuned SAM ViT-B encoder into a 3D grid via topology-conditioned Feature-wise Linear Modulation (FiLM) fusion to weigh orthogonal view reliability against missing-wedge artifacts.
 
-    Awards:
-      - title: Nobel Prize in Physics
-        authors:
-          - "Royal Swedish Academy of Sciences"
-        date: 1921-11-01
-        awarder: Royal Swedish Academy of Sciences
-        url: https://www.nobelprize.org/prizes/physics/1921/einstein/biographical/
-        summary: The Nobel Prizes are five separate prizes that, according to Alfred Nobel's will of 1895, are awarded to 'those who, during the preceding year, have conferred the greatest benefit to humankind.'
+      - company: OpenNLP Labs
+        position: Machine Learning Intern
+        location: California, USA
+        start_date: 2025-04
+        end_date: 2025-07
+        highlights:
+          - Architected an inference pipeline for a fine-tuned QwenVL model utilizing vLLM, continuous batching, and PagedAttention. Implemented weight quantization to minimize memory overhead, achieving a 38ms inference latency and outperforming RetinaNet object detection baselines.
+          - "[Certificate](https://drive.google.com/file/d/18OfpNFpqd8x2O4nxP_9nOkMc2GFHsF3I/view?usp=sharing)"
 
-      - title: Max Planck Medal
-        authors:
-          - "German Physical Society"
-        date: 2029
-        awarder: German Physical Society
-        summary: Awarded for outstanding scientific achievement
+      - company: Woosong University
+        position: Undergraduate Researcher (Two stints, May - July 2024 and May - July 2025)
+        location: Daejeon, South Korea
+        start_date: 2024-05
+        end_date: 2025-07
+        summary: "Advisor: Dr. Surender Reddy Salkuti"
+        highlights:
+          - Built a spatio-temporal GNN with Topological Data Analysis features for solar-irradiance forecasting, achieving a 72.8% reduction in voltage violations in PV systems; fused graph convolutions with an ARIMA-based temporal model for predictive grid-stability control.
+          - "[Certificate](https://drive.google.com/file/d/1qtGpnf0YC0_37KQ6pa3ZJ6ZPaOI-Og3G/view?usp=sharing)"
+
+      - company: Indian Space Research Organisation (ISRO)
+        position: Undergraduate Researcher
+        location: India
+        start_date: 2024-06
+        end_date: 2025-05
+        summary: "Advisor: Dr. Brahmjit Singh"
+        highlights:
+          - Simulated a 10,000-sample GNSS dataset to systematically validate Bi-LSTM architectures for identifying and classifying radio frequency jamming. Processed time-series data utilizing overlapping sliding windows for feature extraction, achieving >99% classification accuracy across dynamic 2dB to 20dB SNR environments.
+          - "[Certificate](https://drive.google.com/file/d/1vSQktF2ZaqzXKW5EIGT0dcF83roMb_UG/view?usp=sharing)"
 
     Publications:
-      - title: Zur Elektrodynamik bewegter Körper
+      - title: "TopoFuse: Topology-Aware Tri-Planar Fusion for 3D Cryo-Electron Tomography Segmentation"
         authors:
-          - Albert Einstein
-        publisher: Annalen der Physik
-        releaseDate: 1905-06-30
-        url: https://en.wikisource.org/wiki/Translation:On_the_Electrodynamics_of_Moving_Bodies
-        summary: It concerned an interpretation of the Michelson–Morley experiment and the properties of light and time. Special relativity incorporates the principle that the speed of light is the same for all inertial observers regardless of the state of motion of the source.
+          - Rohit Kumar Salla
+          - Neelesh Gupta
+          - Xingjian Li
+          - Min Xu
+        publisher: European Conference on Computer Vision (ECCV) 2026
+        releaseDate: 2026-08-31
+        url: https://arxiv.org/abs/2609.29717
 
-      - title: Über einen die Erzeugung und Verwandlung des Lichtes betreffenden heuristischen Gesichtspunkt
+      - title: Jamming Detection of Global Navigational Satellite System utilizing Deep Learning
         authors:
-          - Albert Einstein
-        publisher: Annalen der Physik
-        releaseDate: 1905-03-18
-        url: https://de.wikisource.org/wiki/Über_einen_die_Erzeugung_und_Verwandlung_des_Lichtes_betreffenden_heuristischen_Gesichtspunkt
-        summary: In the second paper, he applied the quantum theory to light to explain the photoelectric effect. In particular, he used the idea of light quanta (photons) to explain experimental results, but stressed the importance of the experimental results. The importance of his work on the photoelectric effect earned him the Nobel Prize in Physics in 1921.
-
-      - title: Die Grundlage der allgemeinen Relativitätstheorie
-        authors:
-          - Albert Einstein
-        publisher: Annalen der Physik
-        releaseDate: 1916-03-20
-        url: https://de.wikisource.org/wiki/Die_Grundlage_der_allgemeinen_Relativitätstheorie
-        summary: The publication of the theory of general relativity made him internationally famous. He was professor of physics at the universities of Zurich (1909–1911) and Prague (1911–1912), before he returned to ETH Zurich (1912–1914).
-
-    Skills:
-      - name: Physics
-        level: Master
-        icon: fa-solid fa-hashtag
-        keywords: "Quantum Mechanics, Quantum Computing, Quantum Information, Quantum Cryptography, Quantum Communication, Quantum Teleportation"
-
-    Languages:
-      - name: German
-        summary: "Native speaker"
-
-      - name: English
-        summary: "Fluent"
-
-    Interests:
-      - name: Physics
-        icon: fa-solid fa-tag
-        keywords: "Quantum Mechanics, Quantum Computing, Quantum Information, Quantum Cryptography, Quantum Communication, Quantum Teleportation"
-
-    Certificates:
-      - name: Machine Learning
-        date: 2018-01-01
-        issuer: Stanford University
-        icon: fa-solid fa-location-dot
-
-      - name: Quantum Computing
-        date: 2018-01-01
-        issuer: Stanford University
-        icon: fa-solid fa-tag
-
-      - name: Quantum Information
-        date: 2018-01-01
-        issuer: Stanford University
-        icon: fa-solid fa-envelope
+          - Brahmjit Singh
+          - Neelesh Gupta
+        publisher: IEEE Global Conference on Wireless Computing and Networking (GCWCN) 2025
+        releaseDate: 2025-11-22
+        url: https://ieeexplore.ieee.org/document/11448371
 
     Projects:
-      - name: Quantum Computing
-        summary: Quantum computing is the use of quantum-mechanical phenomena such as superposition and entanglement to perform computation. Computers that perform quantum computations are known as quantum computers.
+      - name: Generative Diffusion Model
+        url: https://github.com/Neelesh-Gupta/DDPM-Flowers
+        summary: PyTorch, Diffusers
         highlights:
-          - Quantum Teleportation
-          - Quantum Cryptography
-        start_date: 2018-01-01
-        end_date: 2018-01-01
+          - Implemented a Denoising Diffusion Probabilistic Model (UNet-based forward/reverse process) for image synthesis, achieving a Fréchet Inception Distance (FID) of 12.37.
 
-    References:
-      - name: Professor John Doe
-        icon: fa-solid fa-laptop
-        reference: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam condimentum, diam quis convallis euismod, arcu mi ullamcorper lorem, a vestibulum nunc magna at sem. Sed in risus ac felis varius blandit.
+    Skills:
+      - name: Languages
+        icon: fa-solid fa-code
+        keywords: "Python, Java"
+      - name: Frameworks / Libraries
+        icon: fa-solid fa-layer-group
+        keywords: "PyTorch, PyTorch Geometric, TensorFlow, Hugging Face, vLLM, OpenCV"
+      - name: Research Areas
+        icon: fa-solid fa-flask
+        keywords: "Vision Language Models, Generative Models, Graph Neural Networks, Computer Vision"
 
-      - name: Professor Jane Smith
-        icon: fa-solid fa-thumbtack
-        reference: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam condimentum, diam quis convallis euismod, arcu mi ullamcorper lorem, a vestibulum nunc magna at sem. Sed in risus ac felis varius blandit.
+    Awards:
+      - title: Research Grant, Regional Academic Centre for Space (RAC-S), ISRO
+        awarder: Department of Space, Govt. of India
+        summary: Awarded a competitive research grant to fund an independent research project.
+
+      - title: Top 2% (98th percentile), GATE Data Science & AI 2026
+        date: 2026
+        awarder: Graduate Aptitude Test in Engineering
+        url: https://drive.google.com/file/d/1UeG366E0uP7T5opVe7-5-VriqU64QVZa/view?usp=sharing
+
+      - title: Founding Member, Anveshan Anusandhan Research Cell (AARC)
+        awarder: NIT Kurukshetra

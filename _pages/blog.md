@@ -101,6 +101,11 @@ pagination:
 
 {% endif %}
 
+{% if site.posts.size == 0 %}
+
+  <p class="text-center mt-5">The first posts are on their way. Subscribe via <a href="{{ '/feed.xml' | relative_url }}">RSS</a> to get notified.</p>
+  {% endif %}
+
   <ul class="post-list">
 
     {% if page.pagination.enabled %}

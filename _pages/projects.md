@@ -2,10 +2,10 @@
 layout: page
 title: projects
 permalink: /projects/
-description: A growing collection of your cool projects.
+description: research and engineering work, from cryo-ET segmentation to power-grid learning.
 nav: true
 nav_order: 3
-display_categories: [work, fun]
+display_categories: [research, engineering]
 horizontal: false
 ---
 

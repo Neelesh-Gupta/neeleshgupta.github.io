@@ -328,7 +328,7 @@ QAT puts the rounding inside the training loop ([Jacob et al., 2017](https://arx
 
 ![A full-precision master weight climbs from 0.10 to 0.385 under straight-through gradient steps while its deployed quantized copy jumps from 0 to 0.25 to 0.5 and the loss drops to zero]({{ '/assets/blog/weight-quantization-reasoning/qat-master-weights.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
-Does it help? Cell 7 compares PTQ and QAT head to head.
+Cell 7 compares PTQ and QAT head to head.
 
 ```python
 data_rng = np.random.default_rng(1)
@@ -393,7 +393,7 @@ QAT INT4 (STE, fake-quant in loop)     test MSE = 0.0052   (1.7x baseline)
 ```
 ![Output of cell 7]({{ '/assets/blog/weight-quantization-reasoning/cell-07-out-1.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
-This is the longest snippet and the slowest, at 10 to 20 seconds. It builds a toy regression task (targets from a small random "teacher" network, with 1,536 training and 512 test examples) and a student MLP (multi-layer perceptron) with layers of 8, 64, 64 and 1 units and tanh (hyperbolic tangent) activations. The student is trained twice from the same starting weights, for 800 steps of the Adam optimizer: once in full precision, and once with QAT, using fake-quantized INT4 weights and the STE. Then the cell tests the float model, that model rounded to INT4 (PTQ), and the QAT model.
+This snippet builds a toy regression task (targets from a small random "teacher" network, with 1,536 training and 512 test examples) and a student MLP (multi-layer perceptron) with layers of 8, 64, 64 and 1 units and tanh (hyperbolic tangent) activations. The student is trained twice from the same starting weights, for 800 steps of the Adam optimizer: once in full precision, and once with QAT, using fake-quantized INT4 weights and the STE. Then the cell tests the float model, that model rounded to INT4 (PTQ), and the QAT model.
 
 Three numbers come out. The FP32 (32-bit floating point) baseline scores a test MSE of 0.0031, PTQ at INT4 rises to 0.0294 (9.5 times the baseline), and QAT at INT4 reaches 0.0052, just 1.7 times. In the chart, the red PTQ bar towers over the other two. Same bits, same architecture: the only difference is that one model saw the grid while it learned.
 

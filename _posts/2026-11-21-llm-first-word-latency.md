@@ -18,6 +18,7 @@ toc:
     .container[role="main"] > .row > .col-sm-9 { flex: 0 0 82%; max-width: 82%; }
   }
   .post-content img { max-width: min(100%, 960px) !important; }
+  .post-content p.caption { opacity: .8; max-width: 92%; margin: -.25rem auto 1.75rem; }
   .post-content table { width: 100%; }
   .post-content table th, .post-content table td { overflow-wrap: anywhere; }
   @media (max-width: 575px) {
@@ -45,6 +46,9 @@ Decode feeds in a single row, $$x_t \in \mathbb{R}^{1 \times d}$$, for the one n
 
 ![Prefill vs decode on the same weight matrix W: prefill multiplies an N x d prompt matrix by W loaded once (about N FLOPs per byte, compute-bound), decode multiplies a single 1 x d token vector by W loaded in full (about 1 FLOP per byte, memory-bound)]({{ '/assets/blog/llm-first-word-latency/gemm-vs-gemv.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
+*Same weights, two kinds of work. In prefill (left), the GPU loads the weight matrix W once and uses it for all 4,000 prompt tokens, so it does a lot of math for every byte it fetches. In decode (right), it loads the same W to handle a single token, so most of the time goes into fetching W, not computing with it.*
+{: .caption}
+
 Attention splits the same way. Every layer computes
 
 $$\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$
@@ -53,6 +57,9 @@ with $$Q = XW_Q$$, $$K = XW_K$$ and $$V = XW_V$$ the query, key and value projec
 
 ![Causal attention grid: prefill fills the whole 8 x 8 lower triangle at once (blue), then each decode step adds a single new row (orange) for tokens 9, 10 and 11]({{ '/assets/blog/llm-first-word-latency/causal-triangle.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
+*Each square is one attention score: how much one token (a row) looks at another (a column). Grey squares are masked because a token can't look at tokens that come after it. Prefill fills in every blue square in one go; decode then adds just one orange row for each new token.*
+{: .caption}
+
 Decode only ever needs the newest row of that triangle, and the **KV cache** is why. Under causal masking, a token's key and value are fixed the moment they're computed, because nothing that comes later can change them. So the model keeps $$K$$ and $$V$$ for every token it has seen. At step $$t$$ it computes $$q_t$$, $$k_t$$ and $$v_t$$ for the new token alone, appends $$k_t$$ and $$v_t$$ to the cache, and attends with one query:
 
 $$o_t = \text{softmax}\left(\frac{q_t K_{1:t}^\top}{\sqrt{d_k}}\right)V_{1:t}$$
@@ -60,6 +67,9 @@ $$o_t = \text{softmax}\left(\frac{q_t K_{1:t}^\top}{\sqrt{d_k}}\right)V_{1:t}$$
 $$K_{1:t}$$ and $$V_{1:t}$$ are the cached keys and values for tokens $$1$$ through $$t$$, and $$o_t$$ is the new token's attention output.
 
 ![KV cache during decode: each new token appends one key row and one value row, and its query sweeps the cached keys once to produce attention weights and the output o_t]({{ '/assets/blog/llm-first-word-latency/kv-cache-growing.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
+
+*The KV cache during decode. Each new token adds one row to the stored keys (K) and values (V). Its query q_t is compared with every stored key once (the yellow flashes), those scores become weights, and the weighted values give the output o_t. Nothing from earlier tokens is recomputed.*
+{: .caption}
 
 | | Prefill (first token) | Decode (every later token) |
 |---|---|---|
@@ -118,6 +128,9 @@ Decode reads every weight to process one token: $$2P$$ FLOPs over $$2P$$ bytes, 
 Prefill reads each weight once and reuses it across all $$N$$ tokens: $$2PN$$ FLOPs over roughly $$2P$$ bytes, so $$\text{AI} \approx N$$. A few hundred tokens into the prompt it crosses the ridge, and from there the tensor cores run flat out.
 
 ![H100 roofline on log-log axes: as prompt length N grows from 1 to 4,000, prefill climbs the 3.35 TB/s memory slope and reaches the 989 TFLOP/s compute roof near the 295 FLOP/byte ridge, while decode stays at an arithmetic intensity of about 1]({{ '/assets/blog/llm-first-word-latency/roofline-slide.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
+
+*Left to right is how much math the GPU does per byte it reads; bottom to top is the speed it reaches. Decode (orange) sits at about 1 FLOP per byte, stuck low on the sloped memory line and using a tiny fraction of the GPU. As the prompt grows, prefill (blue) climbs that slope and, after about 300 tokens, reaches the flat ceiling where the GPU computes at full speed.*
+{: .caption}
 
 Prefill takes visible time because there's a lot of math, but it does that math at full speed. Decode has almost nothing to compute and still waits, every single step, for the whole model to come out of memory.
 
@@ -178,6 +191,9 @@ Then there's the queue. A server runs many users at once, and a 10,000-token pre
 Last comes prefix caching, or rather missing it. If the start of your prompt (a system prompt, earlier turns in the chat) matches something the server processed recently, engines like [vLLM](https://arxiv.org/abs/2309.06180) (automatic prefix caching) and [SGLang](https://arxiv.org/abs/2312.07104) (RadixAttention) reuse its cached K and V and only prefill the new part. The catch is that every token's K and V depend on everything before it. Change one early token, say a timestamp at the top of the system prompt, and the cache is invalid for everything after it.
 
 ![Timelines of the first-word wait: a standard model shows its first token after queue plus a 0.56 s prefill, while a reasoning model first spends about 31 s decoding 1,500 hidden reasoning tokens before its first visible token]({{ '/assets/blog/llm-first-word-latency/ttft-timeline.png' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
+
+*Why the first word can take even longer in a real product. Top: a standard model waits in a queue, spends about 0.56 s reading your prompt, then streams tokens 21 ms apart. Bottom: a reasoning model also writes about 1,500 hidden thinking tokens first, which adds roughly 31 s before you see anything.*
+{: .caption}
 
 Put together, the first word waits on one compute-bound pass over your whole prompt, plus whatever the service stacks in front of it. Every word after that waits on a memory-bound sweep through the weights. Per token, the first wait is still the cheap one, by about 150×.
 

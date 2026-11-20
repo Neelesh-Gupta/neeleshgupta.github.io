@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-LATEST BLOG: [Why Batch Norm struggles inside transformers!](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/batch-norm-transformers/)
+BLOG: [Why Batch Norm struggles inside transformers!](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/batch-norm-transformers/)

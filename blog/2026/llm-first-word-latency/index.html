@@ -1,0 +1,264 @@
+<!DOCTYPE html> <html lang="en"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> Why Does an LLM Take So Long to Say the First Word, Then Answer Almost Instantly? | Neelesh Gupta </title> <meta name="author" content="Neelesh Gupta"> <meta name="description" content="Why an LLM pauses before its first word and then streams the rest, worked through with FLOP counts, the roofline model and a 70B-on-H100 estimate."> <meta name="keywords" content="Neelesh Gupta, machine learning, computer vision, geometric deep learning, graph neural networks, AI for science, continual learning"> <meta property="og:site_name" content="Neelesh Gupta"> <meta property="og:type" content="article"> <meta property="og:title" content="Neelesh Gupta | Why Does an LLM Take So Long to Say the First Word, Then Answer Almost Instantly?"> <meta property="og:url" content="https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/llm-first-word-latency/"> <meta property="og:description" content="Why an LLM pauses before its first word and then streams the rest, worked through with FLOP counts, the roofline model and a 70B-on-H100 estimate."> <meta property="og:image" content="https://neelesh-gupta.github.io/neeleshgupta.github.io/assets/img/neelesh_iit_roorkee.jpg"> <meta property="og:locale" content="en"> <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="Why Does an LLM Take So Long to Say the First Word, Then Answer Almost Instantly?"> <meta name="twitter:description" content="Why an LLM pauses before its first word and then streams the rest, worked through with FLOP counts, the roofline model and a 70B-on-H100 estimate."> <meta name="twitter:image" content="https://neelesh-gupta.github.io/neeleshgupta.github.io/assets/img/neelesh_iit_roorkee.jpg"> <script type="application/ld+json">
+    {
+        "author":
+        {
+            "@type": "Person",
+            "name": "Neelesh Gupta"
+        },
+        "url": "https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/llm-first-word-latency/",
+        "@type": "BlogPosting",
+        "description": "Why an LLM pauses before its first word and then streams the rest, worked through with FLOP counts, the roofline model and a 70B-on-H100 estimate.",
+        "headline": "Why Does an LLM Take So Long to Say the First Word, Then Answer Almost Instantly?",
+        
+        "sameAs": ["https://scholar.google.com/citations?user=JXLzjDsAAAAJ","https://github.com/Neelesh-Gupta","https://www.linkedin.com/in/neelesh-gupta-92b2bb2b5",null],
+        
+        "name": "Neelesh Gupta",
+        "@context": "https://schema.org"
+    }
+  </script> <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"> <style>
+  :root {
+    --max-content-width: 930px;
+  }
+</style> <link rel="stylesheet" href="/neeleshgupta.github.io/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tocbot@4.36.4/dist/tocbot.css" integrity="sha256-zTN0r+0OKaIv2xqeNNIYxNk0pWJ6+IqPGc1iDgVzWF0=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/neeleshgupta.github.io/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%F0%9F%A7%A0&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/neeleshgupta.github.io/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/llm-first-word-latency/"> <script src="/neeleshgupta.github.io/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/neeleshgupta.github.io/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/neeleshgupta.github.io/"> <span class="font-weight-bold">Neelesh</span> Gupta </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/">About </a> </li> <li class="nav-item active"> <a class="nav-link" href="/neeleshgupta.github.io/blog/">Blog </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/publications/">Publications </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/projects/">Projects </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/repositories/">Repositories </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/cv/">CV </a> </li> <li class="nav-item"> <button id="search-toggle" type="button" title="Search" aria-label="Open search"> <span class="nav-link"><i class="fa-solid fa-magnifying-glass"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="row"> <div class="col-sm-3"> <nav id="toc-sidebar" class="sticky-top toc toc-sidebar" aria-label="Table of contents" data-toc-collapse="expanded" data-toc-collapse-depth=""></nav> </div> <div class="col-sm-9"> <div class="post"> <header class="post-header"> <h1 class="post-title">Why Does an LLM Take So Long to Say the First Word, Then Answer Almost Instantly?</h1> <p class="post-meta"> Created on November 20, 2026 </p> <p class="post-tags"> <a href="/neeleshgupta.github.io/blog/2026"> <i class="fa-solid fa-calendar fa-sm"></i> 2026 </a>   ·   <a href="/neeleshgupta.github.io/blog/tag/llm"> <i class="fa-solid fa-hashtag fa-sm"></i> llm</a>   <a href="/neeleshgupta.github.io/blog/tag/inference"> <i class="fa-solid fa-hashtag fa-sm"></i> inference</a>   <a href="/neeleshgupta.github.io/blog/tag/prefill"> <i class="fa-solid fa-hashtag fa-sm"></i> prefill</a>   <a href="/neeleshgupta.github.io/blog/tag/decode"> <i class="fa-solid fa-hashtag fa-sm"></i> decode</a>   <a href="/neeleshgupta.github.io/blog/tag/roofline"> <i class="fa-solid fa-hashtag fa-sm"></i> roofline</a>   ·   <a href="/neeleshgupta.github.io/blog/category/machine-learning"> <i class="fa-solid fa-tag fa-sm"></i> machine-learning</a> </p> </header> <article class="post-content"> <div id="markdown-content"> <style>
+  /* This post only: use the window's width so tables, equations and figures fit without sideways scrolling. */
+  @media (min-width: 576px) {
+    .container[role="main"], .navbar .container, footer .container { max-width: min(calc(100vw - 32px), 1520px); }
+    .container[role="main"] > .row > .col-sm-3 { flex: 0 0 18%; max-width: 18%; }
+    .container[role="main"] > .row > .col-sm-9 { flex: 0 0 82%; max-width: 82%; }
+  }
+  .post-content img { max-width: min(100%, 960px) !important; }
+  .post-content table { width: 100%; }
+  .post-content table th, .post-content table td { overflow-wrap: anywhere; }
+  @media (max-width: 575px) {
+    .post-content mjx-container[display] { font-size: 90% !important; }
+    .post-content table { font-size: 75%; }
+    .post-content table th, .post-content table td { padding: .3rem .35rem; }
+  }
+</style> <p>Paste a long document into a chatbot and hit Enter. For a moment, nothing. Then the answer pours out faster than you can read it.</p> <p>Serving engineers track those two halves with separate numbers. Time to first token (TTFT) is the pause. Time per output token (TPOT) is the average gap between tokens after that (the gap between any two consecutive tokens is called inter-token latency).</p> <p>The obvious guess is that the first token is expensive and the rest are cheap. The arithmetic says otherwise. Take a 70B-parameter model in FP16 on two H100 GPUs and a 4,000-token prompt (the estimate is worked out <a href="#the-back-of-envelope-version">below</a>). Prefill gets through the whole prompt in about 0.56 s, roughly 0.14 ms per token. Decode then spends about 21 ms on every single token it writes.</p> <p>So per token, reading your prompt is about 150 times cheaper than writing the answer. Prefill is the efficient phase. It only feels slow because you sit through all 4,000 tokens of it before the model can say anything, while decode just has to stay ahead of your eyes. At 21 ms a token, it does.</p> <h2 id="same-weights-very-different-shapes">Same weights, very different shapes</h2> <p>Both phases run the exact same weights. What differs is the shape of the work they hand the GPU.</p> <p>In prefill, all \(N\) prompt tokens go in together as one matrix \(X \in \mathbb{R}^{N \times d}\), where \(d\) is the hidden size (8,192 for a Llama-style 70B). Each linear layer multiplies that whole matrix by a weight matrix like \(W_Q \in \mathbb{R}^{d \times d}\). One weight matrix, \(N\) rows of input. That’s a matrix-matrix multiply, or GEMM.</p> <p>Decode feeds in a single row, \(x_t \in \mathbb{R}^{1 \times d}\), for the one new token. Same weight matrix, one row of input, so now it’s a matrix-vector multiply (GEMV).</p> <p><img src="/neeleshgupta.github.io/assets/blog/llm-first-word-latency/gemm-vs-gemv.png" alt="Prefill vs decode on the same weight matrix W: prefill multiplies an N x d prompt matrix by W loaded once (about N FLOPs per byte, compute-bound), decode multiplies a single 1 x d token vector by W loaded in full (about 1 FLOP per byte, memory-bound)" class="img-fluid rounded z-depth-1" style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"></p> <p>Attention splits the same way. Every layer computes</p> \[\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)V\] <p>with \(Q = XW_Q\), \(K = XW_K\) and \(V = XW_V\) the query, key and value projections and \(d_k\) the size of one attention head. \(QK^\top\) is an \(N \times N\) grid of scores, one for every pair of tokens. Causal masking throws away the upper half, since a token can look back but never ahead, and prefill fills in the whole remaining triangle in a single pass.</p> <p><img src="/neeleshgupta.github.io/assets/blog/llm-first-word-latency/causal-triangle.gif" alt="Causal attention grid: prefill fills the whole 8 x 8 lower triangle at once (blue), then each decode step adds a single new row (orange) for tokens 9, 10 and 11" class="img-fluid rounded z-depth-1" style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"></p> <p>Decode only ever needs the newest row of that triangle, and the <strong>KV cache</strong> is why. Under causal masking, a token’s key and value are fixed the moment they’re computed, because nothing that comes later can change them. So the model keeps \(K\) and \(V\) for every token it has seen. At step \(t\) it computes \(q_t\), \(k_t\) and \(v_t\) for the new token alone, appends \(k_t\) and \(v_t\) to the cache, and attends with one query:</p> \[o_t = \text{softmax}\left(\frac{q_t K_{1:t}^\top}{\sqrt{d_k}}\right)V_{1:t}\] <p>\(K_{1:t}\) and \(V_{1:t}\) are the cached keys and values for tokens \(1\) through \(t\), and \(o_t\) is the new token’s attention output.</p> <p><img src="/neeleshgupta.github.io/assets/blog/llm-first-word-latency/kv-cache-growing.gif" alt="KV cache during decode: each new token appends one key row and one value row, and its query sweeps the cached keys once to produce attention weights and the output o_t" class="img-fluid rounded z-depth-1" style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"></p> <table> <thead> <tr> <th> </th> <th>Prefill (first token)</th> <th>Decode (every later token)</th> </tr> </thead> <tbody> <tr> <td>Input per step</td> <td>all \(N\) prompt tokens</td> <td>1 new token</td> </tr> <tr> <td>Linear algebra</td> <td>matrix × matrix (GEMM)</td> <td>matrix × vector (GEMV)</td> </tr> <tr> <td>Attention per layer</td> <td>the full \(N \times N\) triangle</td> <td>one row of length \(t\)</td> </tr> <tr> <td>Bottleneck</td> <td>compute (FLOP/s)</td> <td>memory bandwidth (bytes/s)</td> </tr> <tr> <td>What the user feels</td> <td>TTFT</td> <td>TPOT</td> </tr> </tbody> </table> <p>Most of that table falls straight out of the shapes. The bottleneck row doesn’t, and it’s the row that matters. Getting to it takes two steps: count the work, then look at what actually limits the GPU.</p> <h2 id="count-the-flops-first">Count the FLOPs first</h2> <p>A rule of thumb that holds up well is 2 FLOPs per parameter per token. Each weight does one multiply and one add for every token that passes through it. For a model with \(P\) parameters,</p> \[\begin{gathered} \text{FLOPs}_{\text{prefill}} \approx 2PN \\ \text{FLOPs}_{\text{decode}} \approx 2P \ \text{per token} \end{gathered}\] <p>Attention adds its own work on top, and that part grows with the square of the prompt length. With \(L\) layers and causal masking it’s roughly</p> \[\text{FLOPs}_{\text{attention}} \approx 2N^2 d L\] <p>This is the term people blame when they say prefill is slow “because attention is quadratic.” At ordinary prompt lengths it barely registers. For a 70B model (\(d = 8{,}192\), \(L = 80\)) at \(N = 4{,}000\), attention comes to about \(2.1 \times 10^{13}\) FLOPs against \(5.6 \times 10^{14}\) for the linear layers. Under 4%. The two only meet at</p> \[N^* \approx \frac{P}{dL}\] <p>which works out to roughly 107,000 tokens for this model, or about 53,000 if the kernel computes the masked half anyway. Below that, and once the prompt is longer than a few hundred tokens (the next section explains that threshold), prefill time grows almost linearly with prompt length, and most of it goes into the same weight matrices decode uses.</p> <p>So prefill does about \(N\) times the work of a decode step, which here means 4,000 times. If FLOPs told the whole story, a decode step would take \(0.56\ \text{s} / 4{,}000 = 0.14\) ms and a 500-token answer would show up in 70 ms. Real decode is about 150 times slower than that. Arithmetic isn’t what sets its pace.</p> <h2 id="why-less-math-doesnt-mean-less-time">Why less math doesn’t mean less time</h2> <p>A GPU can run short of two things: compute, or the bandwidth to keep that compute fed. The <strong>roofline model</strong> (<a href="https://doi.org/10.1145/1498765.1498785" rel="external nofollow noopener" target="_blank">Williams, Waterman &amp; Patterson, 2009</a>) puts both limits on one chart, and once you’ve seen it, the prefill/decode split stops being mysterious.</p> <p>On the x-axis sits <strong>arithmetic intensity</strong>, the math a computation does per byte it pulls from GPU memory (HBM) into the cores:</p> \[\text{AI} = \frac{\text{FLOPs}}{\text{bytes moved}}\] <p>The y-axis is the FLOP/s you actually get, and two ceilings cap it. At low intensity the cores mostly wait for data, so you get bandwidth × AI. That’s the sloped memory roof, and an H100 (the SXM version, which all the numbers here assume) moves 3.35 TB/s. At high intensity the cores stay busy and performance flattens out at peak, about 989 TFLOP/s of dense FP16 on an H100. (<a href="https://www.nvidia.com/en-us/data-center/h100/" rel="external nofollow noopener" target="_blank">NVIDIA</a> advertises 1,979, but that’s a with-sparsity number.) The slope meets the flat roof at the <strong>ridge point</strong>:</p> \[\begin{aligned} \text{AI}_{\text{ridge}} &amp;= \frac{\text{peak FLOP/s}}{\text{bandwidth}} \\ &amp;\approx \frac{989 \times 10^{12}}{3.35 \times 10^{12}} \approx 295 \ \text{FLOP/byte} \end{aligned}\] <p>Anything left of the ridge is memory-bound, anything right of it compute-bound. To see where the two phases land, remember that an FP16 weight is 2 bytes and contributes 2 FLOPs for every token it touches.</p> <p>Decode reads every weight to process one token: \(2P\) FLOPs over \(2P\) bytes, so \(\text{AI} \approx 1\) FLOP/byte. Nowhere near the ridge. Each step goes on streaming 140 GB of weights while the tensor cores use well under 1% of what they could do. (Decode also re-reads the KV cache every step, which adds bytes as the context grows; I leave it out to keep the numbers simple, and it only pushes decode further left.)</p> <p>Prefill reads each weight once and reuses it across all \(N\) tokens: \(2PN\) FLOPs over roughly \(2P\) bytes, so \(\text{AI} \approx N\). A few hundred tokens into the prompt it crosses the ridge, and from there the tensor cores run flat out.</p> <p><img src="/neeleshgupta.github.io/assets/blog/llm-first-word-latency/roofline-slide.gif" alt="H100 roofline on log-log axes: as prompt length N grows from 1 to 4,000, prefill climbs the 3.35 TB/s memory slope and reaches the 989 TFLOP/s compute roof near the 295 FLOP/byte ridge, while decode stays at an arithmetic intensity of about 1" class="img-fluid rounded z-depth-1" style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"></p> <p>Prefill takes visible time because there’s a lot of math, but it does that math at full speed. Decode has almost nothing to compute and still waits, every single step, for the whole model to come out of memory.</p> <p>This is also why providers batch. If \(B\) users decode together, one pass over the weights serves all of them: \(2PB\) FLOPs over \(2P\) bytes, so \(\text{AI} \approx B\). A batch of 64 gets 64 tokens for the weight traffic of one (each user’s KV cache is still read separately). Your own tokens don’t come any faster, but the GPU does far more useful work per byte, and the compute still sitting idle turns out to be handy for prefill (more on that at the end).</p> <h2 id="the-back-of-envelope-version">The back-of-envelope version</h2> <p>A 70B model in FP16 is 140 GB of weights. One H100 has 80 GB. So I split the model across two GPUs with tensor parallelism, each holding half of every layer, and assume compute and bandwidth simply double, ignoring communication between the GPUs and letting real kernels reach about half of peak. That puts effective compute \(F_{\text{eff}}\) at about 500 TFLOP/s per H100, so about 1,000 TFLOP/s for the pair, and memory bandwidth \(BW\) at 3.35 TB/s each, 6.7 TB/s together.</p> <p>Prefill is compute-bound, so its time is FLOPs over compute:</p> \[\begin{aligned} \text{TTFT} &amp;\approx \frac{2PN}{F_{\text{eff}}} \\ &amp;= \frac{2 \times (70 \times 10^9) \times 4{,}000}{10^{15}} \approx 0.56 \ \text{s} \end{aligned}\] <p>Decode is memory-bound, so its time is bytes over bandwidth:</p> \[\begin{aligned} \text{TPOT} &amp;\approx \frac{\text{weight bytes}}{BW} = \frac{140 \times 10^9}{6.7 \times 10^{12}} \\ &amp;\approx 21 \ \text{ms} \quad (\approx 48 \ \text{tokens/s}) \end{aligned}\] <p>Now go per token. Prefill spends \(2P / F_{\text{eff}}\) on each prompt token and decode spends \(2P / BW\) on each output token, so</p> \[\begin{aligned} \frac{\text{decode time per token}}{\text{prefill time per token}} &amp;= \frac{2P / BW}{2P / F_{\text{eff}}} \\ &amp;= \frac{F_{\text{eff}}}{BW} \approx \frac{10^{15}}{6.7 \times 10^{12}} \approx 150 \end{aligned}\] <p>The parameter count cancels, which to me is the nicest part of the whole calculation. What’s left, the 150× gap, is the GPU’s <em>effective</em> ridge point: how many FLOPs it can do in the time it takes to move one byte. Run an 8B model on one H100, or a 405B model across as many H100s as it takes to hold it, and the per-token ratio stays roughly the same. Only the absolute times change. (Roughly, because attention and KV-cache traffic don’t scale with the parameter count, and small models don’t always keep the GPU busy.)</p> <p>And 48 tokens a second is roughly 35 words a second, at about three-quarters of an English word per token. A typical adult reads around 4. Once prefill is done the stream outruns you, so it looks instant, even though every token in it is the expensive kind.</p> <h2 id="why-its-even-slower-in-a-real-product">Why it’s even slower in a real product</h2> <p>That 0.56 s is a floor. A real service piles more on top, in three ways.</p> <p>Start with reasoning models. They decode a hidden chain of thought before the visible answer, and those tokens run at decode speed, so the wait you actually see is</p> \[\begin{aligned} \text{TTFT}_{\text{visible}} &amp;= \text{TTFT}_{\text{prefill}} \\ &amp;\quad + N_{\text{think}} \times \text{TPOT} \end{aligned}\] <p>At 21 ms per token, 1,500 thinking tokens add about 31 s. Prefill is a rounding error next to that.</p> <p>Then there’s the queue. A server runs many users at once, and a 10,000-token prefill done in one go would stall everyone else’s stream for as long as it runs. Schedulers like <a href="https://arxiv.org/abs/2403.02310" rel="external nofollow noopener" target="_blank">Sarathi-Serve</a> chop long prompts into chunks and run each chunk alongside the ongoing decode batch, soaking up the idle compute the roofline says is there. Everyone keeps streaming. Your prefill, though, is now spread over several passes, and you may wait for GPU memory before it starts at all.</p> <p>Last comes prefix caching, or rather missing it. If the start of your prompt (a system prompt, earlier turns in the chat) matches something the server processed recently, engines like <a href="https://arxiv.org/abs/2309.06180" rel="external nofollow noopener" target="_blank">vLLM</a> (automatic prefix caching) and <a href="https://arxiv.org/abs/2312.07104" rel="external nofollow noopener" target="_blank">SGLang</a> (RadixAttention) reuse its cached K and V and only prefill the new part. The catch is that every token’s K and V depend on everything before it. Change one early token, say a timestamp at the top of the system prompt, and the cache is invalid for everything after it.</p> <p><img src="/neeleshgupta.github.io/assets/blog/llm-first-word-latency/ttft-timeline.png" alt="Timelines of the first-word wait: a standard model shows its first token after queue plus a 0.56 s prefill, while a reasoning model first spends about 31 s decoding 1,500 hidden reasoning tokens before its first visible token" class="img-fluid rounded z-depth-1" style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"></p> <p>Put together, the first word waits on one compute-bound pass over your whole prompt, plus whatever the service stacks in front of it. Every word after that waits on a memory-bound sweep through the weights. Per token, the first wait is still the cheap one, by about 150×.</p> <h2 id="further-reading">Further reading</h2> <ul> <li> <a href="https://arxiv.org/abs/2211.05102" rel="external nofollow noopener" target="_blank">Pope et al., 2022, “Efficiently Scaling Transformer Inference”</a>, the standard analysis of prefill vs decode cost at scale, including batch size and how to split a model across chips.</li> <li> <a href="https://kipp.ly/transformer-inference-arithmetic/" rel="external nofollow noopener" target="_blank">kipply, 2022, “Transformer Inference Arithmetic”</a>, which works the 2-FLOPs-per-parameter rule and memory- vs compute-bound decoding through by hand.</li> <li> <a href="https://arxiv.org/abs/2402.16363" rel="external nofollow noopener" target="_blank">Yuan et al., 2024, “LLM Inference Unveiled: Survey and Roofline Model Insights”</a>, a survey that looks at inference techniques through the roofline model.</li> <li> <a href="https://doi.org/10.1145/1498765.1498785" rel="external nofollow noopener" target="_blank">Williams, Waterman &amp; Patterson, 2009, “Roofline: An Insightful Visual Performance Model for Multicore Architectures”</a>, the original roofline paper (Communications of the ACM 52(4)).</li> <li> <a href="https://arxiv.org/abs/2403.02310" rel="external nofollow noopener" target="_blank">Agrawal et al., 2024, “Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve”</a>, for chunked prefill and stall-free scheduling in detail.</li> </ul> </div> </article> </div> </div> </div> </div> <script>
+  window.alFolio = {
+    compatBootstrap: false
+  };
+</script> <script src="/neeleshgupta.github.io/assets/js/nav-toggle.js?v=141bd79a73ebc0f0b6ea58e440ae79fc"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/neeleshgupta.github.io/assets/js/masonry.js?v=e49affc7bd2646f6acdad1dbe02c2359" type="text/javascript"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/neeleshgupta.github.io/assets/al_math/js/mathjax-setup.js"></script> <script src="/neeleshgupta.github.io/assets/js/tooltips-setup.js?v=fe487e99db6c43751e6e7bdb2d6a0611"></script> <script defer src="https://cdn.jsdelivr.net/npm/tocbot@4.36.4/dist/tocbot.min.js" integrity="sha256-lo/r+jQ81wWrxdIiiiEEd538z4+dTJTt+leOuAS7GCw=" crossorigin="anonymous"></script> <script src="/neeleshgupta.github.io/assets/js/no_defer.js?v=53b1b1a645525975c963ce8bf8bfefcf"></script> <script defer src="/neeleshgupta.github.io/assets/js/common.js?v=87baac90f765f2f3362dcf6aaf312a8a"></script> <script defer src="/neeleshgupta.github.io/assets/js/copy_code.js?v=c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/neeleshgupta.github.io/assets/js/jupyter_new_tab.js?v=896d254890d9b47f0281f63bfccf0dee"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/neeleshgupta.github.io/assets/al_img_tools/js/zoom.js"></script> <script defer src="/neeleshgupta.github.io/assets/js/progress-bar.js?v=499464c5c63ced6cf7ad62509f1e2610" type="text/javascript"></script> <script src="https://cdn.jsdelivr.net/npm/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js" integrity="sha256-uMJJ3EoTyfRBoTbR+lrfu1uRQ87RZG8AR3cVNuQVeFg=" crossorigin="anonymous"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/neeleshgupta.github.io/assets/al_search/js/search/ninja-keys.min.js"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/neeleshgupta.github.io/assets/al_search/js/search-setup.js"></script> <script>
+// get the ninja-keys element
+const ninja = document.querySelector('ninja-keys');
+
+// add the home and posts menu items
+ninja.data = [{
+    id: "nav-about",
+    title: "About",
+    section: "Navigation",
+    handler: () => {
+      window.location.href = "/neeleshgupta.github.io/";
+    },
+  },{id: "nav-blog",
+          title: "Blog",
+          description: "",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/blog/";
+          },
+        },{id: "nav-publications",
+          title: "Publications",
+          description: "publications in reverse chronological order. see also Google Scholar.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/publications/";
+          },
+        },{id: "nav-projects",
+          title: "Projects",
+          description: "research and engineering work, from cryo-ET segmentation to power-grid learning.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/projects/";
+          },
+        },{id: "nav-repositories",
+          title: "Repositories",
+          description: "selected code from my GitHub.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/repositories/";
+          },
+        },{id: "nav-cv",
+          title: "CV",
+          description: "Download the PDF version with the icon on the right.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/cv/";
+          },
+        },{id: "post-why-does-an-llm-take-so-long-to-say-the-first-word-then-answer-almost-instantly",
+        
+          title: "Why Does an LLM Take So Long to Say the First Word, Then...",
+        
+        description: "Why an LLM pauses before its first word and then streams the rest, worked through with FLOP counts, the roofline model and a 70B-on-H100 estimate.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/llm-first-word-latency/";
+          
+        },
+      },{id: "post-why-the-correct-setting-makes-worse-images-the-strange-math-of-classifier-free-guidance",
+        
+          title: "Why the “Correct” Setting Makes Worse Images: The Strange Math of Classifier-Free Guidance...",
+        
+        description: "Why the mathematically correct guidance setting makes the worst images, why classifier-free guidance misses the distribution it seems to target, and where exact toy models show it helping and hurting.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/strange-math-of-cfg/";
+          
+        },
+      },{id: "post-decoders-cost-more-than-encoders-so-why-is-almost-every-llm-a-decoder",
+        
+          title: "Decoders Cost More Than Encoders. So Why Is Almost Every LLM a Decoder?...",
+        
+        description: "Why a decoder pays far more per generated token than an encoder pays per input token, and why the industry builds decoder-only models anyway, through roofline math, KV-cache arithmetic and runnable code.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/decoder-vs-encoder-cost/";
+          
+        },
+      },{id: "post-why-batch-norm-struggles-inside-transformers",
+        
+          title: "Why Batch Norm struggles inside transformers!",
+        
+        description: "Why CNNs normalize over the batch and transformers normalize each token, explained through geometry, the math of one shared formula, and runnable PyTorch code.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/batch-norm-transformers/";
+          
+        },
+      },{id: "post-if-weight-quantization-degrades-reasoning-why-is-it-the-industry-standard-for-llm-scaling",
+        
+          title: "If Weight Quantization Degrades Reasoning, Why Is It the Industry Standard for LLM...",
+        
+        description: "Why 4-bit weights hurt reasoning, why the industry quantizes anyway, and how PTQ, QAT and mixed-precision QAT fit together, with NumPy code you can run in Google Colab.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/weight-quantization-reasoning/";
+          
+        },
+      },{id: "news-our-paper-on-gnss-jamming-detection-with-deep-learning-was-presented-at-ieee-gcwcn-2025-https-ieeexplore-ieee-org-document-11448371",
+          title: 'Our paper on GNSS jamming detection with deep learning was presented at [IEEE...',
+          description: "",
+          section: "News",},{id: "news-graduated-with-a-b-tech-in-electrical-engineering-from-nit-kurukshetra-mortar-board",
+          title: 'Graduated with a B.Tech in Electrical Engineering from NIT Kurukshetra. <img class="emoji" title=":mortar_board:" alt=":mortar_board:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f393.png" height="20" width="20">',
+          description: "",
+          section: "News",},{id: "news-joined-sapientpriors-as-a-machine-learning-researcher-working-on-continual-learning-agents",
+          title: 'Joined SapientPriors as a Machine Learning Researcher, working on continual learning agents.',
+          description: "",
+          section: "News",},{id: "news-topofuse-https-arxiv-org-abs-2609-29717-topology-aware-tri-planar-fusion-for-3d-cryo-et-segmentation-is-accepted-at-eccv-2026-tada",
+          title: '[TopoFuse](https://arxiv.org/abs/2609.29717), topology-aware tri-planar fusion for 3D cryo-ET segmentation, is accepted at **ECCV 2026**....',
+          description: "",
+          section: "News",},{id: "news-blog-if-weight-quantization-degrades-reasoning-why-is-it-the-industry-standard-for-llm-scaling-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-weight-quantization-reasoning",
+          title: 'BLOG: [If Weight Quantization Degrades Reasoning, Why Is It the Industry Standard for...',
+          description: "",
+          section: "News",},{id: "news-blog-why-batch-norm-struggles-inside-transformers-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-batch-norm-transformers",
+          title: 'BLOG: [Why Batch Norm struggles inside transformers!](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/batch-norm-transformers/)',
+          description: "",
+          section: "News",},{id: "news-blog-decoders-cost-more-than-encoders-so-why-is-almost-every-llm-a-decoder-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-decoder-vs-encoder-cost",
+          title: 'BLOG: [Decoders Cost More Than Encoders. So Why Is Almost Every LLM a...',
+          description: "",
+          section: "News",},{id: "news-latest-blog-why-the-correct-setting-makes-worse-images-the-strange-math-of-classifier-free-guidance-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-strange-math-of-cfg",
+          title: 'LATEST BLOG: [Why the “Correct” Setting Makes Worse Images: The Strange Math of...',
+          description: "",
+          section: "News",},{id: "projects-topofuse",
+          title: 'TopoFuse',
+          description: "Topology-aware tri-planar fusion for 3D cryo-electron tomography segmentation. ECCV 2026.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/1_topofuse/";
+            },},{id: "projects-feasibility-guaranteed-grid-learning",
+          title: 'Feasibility-Guaranteed Grid Learning',
+          description: "A hybrid neural architecture that enforces 100% feasibility of power-grid constraints.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/2_grid_feasibility/";
+            },},{id: "projects-spatio-temporal-gnn-for-solar-forecasting",
+          title: 'Spatio-Temporal GNN for Solar Forecasting',
+          description: "Graph neural networks with topological features for solar-irradiance forecasting and grid stability.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/3_solar_gnn/";
+            },},{id: "projects-gnss-jamming-detection",
+          title: 'GNSS Jamming Detection',
+          description: "Bi-LSTM models that detect and classify radio-frequency jamming in satellite navigation signals. IEEE GCWCN 2025.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/4_gnss_jamming/";
+            },},{id: "projects-low-latency-vlm-inference",
+          title: 'Low-Latency VLM Inference',
+          description: "A vLLM serving pipeline for a fine-tuned QwenVL model with 38 ms inference latency.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/5_vlm_inference/";
+            },},{id: "projects-generative-diffusion-model",
+          title: 'Generative Diffusion Model',
+          description: "A from-scratch Denoising Diffusion Probabilistic Model for image synthesis, FID 12.37.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/6_ddpm/";
+            },},{
+        id: 'social-email',
+        title: 'email',
+        section: 'Socials',
+        handler: () => {
+          window.open("mailto:%6E%65%65%6C%65%73%68%67%75%70%74%61%33%39%39@%67%6D%61%69%6C.%63%6F%6D", "_blank");
+        },
+      },{
+        id: 'social-scholar',
+        title: 'Google Scholar',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://scholar.google.com/citations?user=JXLzjDsAAAAJ", "_blank");
+        },
+      },{
+        id: 'social-github',
+        title: 'GitHub',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://github.com/Neelesh-Gupta", "_blank");
+        },
+      },{
+        id: 'social-linkedin',
+        title: 'LinkedIn',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://www.linkedin.com/in/neelesh-gupta-92b2bb2b5", "_blank");
+        },
+      },{
+        id: 'social-cv',
+        title: 'CV',
+        section: 'Socials',
+        handler: () => {
+          window.open("/neeleshgupta.github.io/assets/pdf/Neelesh_Gupta_CV.pdf", "_blank");
+        },
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
+
+</script> <script src="/neeleshgupta.github.io/assets/al_search/js/shortcut-key.js"></script> </body> </html>

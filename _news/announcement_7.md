@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-LATEST BLOG: [Decoders Cost More Than Encoders. So Why Is Almost Every LLM a Decoder?](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/decoder-vs-encoder-cost/)
+BLOG: [Decoders Cost More Than Encoders. So Why Is Almost Every LLM a Decoder?](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/decoder-vs-encoder-cost/)

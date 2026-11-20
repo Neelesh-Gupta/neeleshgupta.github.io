@@ -10,6 +10,22 @@ toc:
   sidebar: left
 ---
 
+<style>
+  /* This post only: use the window's width so code and figures fit without sideways scrolling. */
+  @media (min-width: 576px) {
+    .container[role="main"], .navbar .container, footer .container { max-width: min(calc(100vw - 32px), 1520px); }
+    .container[role="main"] > .row > .col-sm-3 { flex: 0 0 18%; max-width: 18%; }
+    .container[role="main"] > .row > .col-sm-9 { flex: 0 0 82%; max-width: 82%; }
+  }
+  .post-content img { max-width: min(100%, 960px) !important; }
+  .post-content pre.highlight, .post-content pre.highlight code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  @media (max-width: 575px) {
+    .post-content mjx-container[display] { font-size: 90% !important; }
+    .post-content table { font-size: 75%; }
+    .post-content table th, .post-content table td { padding: .3rem .35rem; }
+  }
+</style>
+
 Open a ResNet and there's a `BatchNorm2d` after nearly every convolution. Open a GPT-style model and you get `LayerNorm` (or its cousin `RMSNorm`) in front of every attention and MLP block. On paper the two do the same job: subtract a mean, divide by a standard deviation, apply a learned scale and shift. So why did the two families of models end up with different ones?
 
 In an earlier #BehindTheBasics post I gave the short answer: it comes down to which axis you compute the statistics over. Batch Norm compares a feature with the same feature in the other samples of the batch. Layer Norm looks at one sample and nothing else. My analogy was grading. Batch Norm grades on a curve, so your mark depends on who else sat the exam; Layer Norm marks each paper on its own.
@@ -29,9 +45,11 @@ Everything starts from two tensor shapes. After a convolution, a CNN's activatio
 To write that down, let $$x$$ be one entry and $$S(x)$$ the group of entries it shares statistics with, meaning everything that matches $$x$$ on the axes *not* in $$S$$. Then
 
 $$
-\mu_S = \frac{1}{|S(x)|} \sum_{x' \in S(x)} x', \qquad
-\sigma_S^2 = \frac{1}{|S(x)|} \sum_{x' \in S(x)} (x' - \mu_S)^2, \qquad
+\begin{gathered}
+\mu_S = \frac{1}{|S(x)|} \sum_{x' \in S(x)} x', \\
+\sigma_S^2 = \frac{1}{|S(x)|} \sum_{x' \in S(x)} (x' - \mu_S)^2, \\
 y = \gamma \, \frac{x - \mu_S}{\sqrt{\sigma_S^2 + \epsilon}} + \beta .
+\end{gathered}
 $$
 
 $$\epsilon$$ is a small constant (PyTorch's default is $$10^{-5}$$) that keeps the division finite. $$\gamma, \beta$$ are a learned scale and shift, one per channel or feature, which let the network undo the normalization if it wants to. One detail matters if you ever check your own code against PyTorch: the variance is the biased one, divided by $$\lvert S(x)\rvert$$ and not $$\lvert S(x)\rvert - 1$$. Every library norm layer does it this way.
@@ -145,9 +163,10 @@ Look at the matrix $$P = I - \frac{1}{d}\mathbf{1}\mathbf{1}^\top$$. It's symmet
 The second step, dividing by the standard deviation, lands the vector on a sphere. The variance is the mean squared entry of the centered vector, $$\sigma^2 = \frac{1}{d}\lVert P x \rVert^2$$, so $$\sigma = \lVert Px \rVert / \sqrt{d}$$ and
 
 $$
-\mathrm{LN}(x) = \frac{P x}{\sigma} = \sqrt{d}\, \frac{P x}{\lVert P x \rVert},
-\qquad
+\begin{gathered}
+\mathrm{LN}(x) = \frac{P x}{\sigma} = \sqrt{d}\, \frac{P x}{\lVert P x \rVert}, \\
 \lVert \mathrm{LN}(x) \rVert = \sqrt{d} .
+\end{gathered}
 $$
 
 Every output has length $$\sqrt{d}$$, however long the input was. Put the two steps together and Layer Norm drops $$x$$ onto the hyperplane $$\mathbf{1}^\perp$$, then pushes it out to the sphere of radius $$\sqrt{d}$$ inside that hyperplane, which is a $$(d-2)$$-dimensional sphere. Each token loses exactly two numbers, its mean and its scale, and keeps its direction within $$\mathbf{1}^\perp$$. The learned $$\gamma$$ and $$\beta$$ then stretch the sphere into an ellipsoid and move it, so the next layer always receives a fixed, learned shape instead of activations of whatever size happened to come in.
@@ -157,9 +176,10 @@ Every output has length $$\sqrt{d}$$, however long the input was. Put the two st
 RMSNorm skips the first step. [Zhang & Sennrich (2019)](https://arxiv.org/abs/1910.07467) argued that re-centering contributes little to Layer Norm, so they dropped it and divided by the root mean square in place of the standard deviation:
 
 $$
-\mathrm{RMS}(x) = \sqrt{\tfrac{1}{d}\textstyle\sum_i x_i^2} = \frac{\lVert x \rVert}{\sqrt{d}},
-\qquad
+\begin{gathered}
+\mathrm{RMS}(x) = \sqrt{\tfrac{1}{d}\textstyle\sum_i x_i^2} = \frac{\lVert x \rVert}{\sqrt{d}}, \\
 \mathrm{RMSNorm}(x) = \frac{x}{\mathrm{RMS}(x)} = \sqrt{d}\,\frac{x}{\lVert x \rVert} .
+\end{gathered}
 $$
 
 The length is still $$\sqrt{d}$$, but the output can now sit anywhere on the full $$(d-1)$$-dimensional sphere; Layer Norm's outputs were confined to the slice of it that lies in $$\mathbf{1}^\perp$$. RMSNorm throws away the scale and keeps the mean. It's cheaper too: one reduction (the sum of squares) against Layer Norm's two (the mean, then the variance).
@@ -213,9 +233,11 @@ The sphere shows up in the backward pass as well. Since $$\mathrm{LN}(c\,x) = \m
 Now take a whole batch: $$B$$ samples with $$d$$ features each, stacked into a matrix $$X \in \mathbb{R}^{B \times d}$$ with one sample per row and one feature per column. Layer Norm works row by row, applying the projection-and-sphere map to each sample on its own. Batch Norm works column by column. For feature $$j$$ it computes
 
 $$
-\mu_j = \frac{1}{B}\sum_{i=1}^{B} X_{ij}, \qquad
-\sigma_j^2 = \frac{1}{B}\sum_{i=1}^{B} (X_{ij} - \mu_j)^2, \qquad
+\begin{gathered}
+\mu_j = \frac{1}{B}\sum_{i=1}^{B} X_{ij}, \\
+\sigma_j^2 = \frac{1}{B}\sum_{i=1}^{B} (X_{ij} - \mu_j)^2, \\
 \hat X_{ij} = \frac{X_{ij} - \mu_j}{\sqrt{\sigma_j^2 + \epsilon}} .
+\end{gathered}
 $$
 
 The picture I find most useful is a cloud of $$B$$ points in $$\mathbb{R}^d$$. Batch Norm slides the whole cloud so its centroid is at the origin, then stretches or squeezes it along each coordinate axis until the spread along every axis is 1. That's a single affine map, $$x \mapsto D^{-1}(x - \mu)$$ with $$D = \mathrm{diag}(\sigma_1, \dots, \sigma_d)$$, applied to every sample alike.
@@ -321,8 +343,10 @@ First you have to decide what Batch Norm even means for a $$(B, T, D)$$ tensor. 
 The obvious one is padding. Sentences have different lengths, so to stack sentences of length 6, 4, 5 and 3 into one tensor you pad them all to a shared length $$T$$, usually with zeros (or a padding embedding), and a naive Batch Norm counts those positions as data. Say the batch has $$n = B \cdot T$$ positions, $$p$$ of them padding zeros, and call $$f = p/n$$ the padding fraction. Zeros add nothing to a sum, so for a feature whose real tokens have mean $$\mu_r$$ and mean square $$m_r = \mathbb{E}_r[x^2]$$,
 
 $$
-\mu_{\text{batch}} = (1 - f)\,\mu_r, \qquad
+\begin{gathered}
+\mu_{\text{batch}} = (1 - f)\,\mu_r, \\
 \sigma^2_{\text{batch}} = (1 - f)\,m_r - (1 - f)^2 \mu_r^2 .
+\end{gathered}
 $$
 
 Both statistics depend on $$f$$, and $$f$$ depends on how long the *other* sentences in the batch are. So the same token gets a different value in a different batch. You can mask the padding out, but that only moves the problem: each feature's statistics then depend on how many real tokens the batch happens to contain.

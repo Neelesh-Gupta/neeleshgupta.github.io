@@ -34,7 +34,7 @@ $$
 y = \gamma \, \frac{x - \mu_S}{\sqrt{\sigma_S^2 + \epsilon}} + \beta .
 $$
 
-$$\epsilon$$ is a small constant (PyTorch's default is $$10^{-5}$$) that keeps the division finite. $$\gamma, \beta$$ are a learned scale and shift, one per channel or feature, which let the network undo the normalization if it wants to. One detail matters if you ever check your own code against PyTorch: the variance is the biased one, divided by $$|S(x)|$$ and not $$|S(x)| - 1$$. Every library norm layer does it this way.
+$$\epsilon$$ is a small constant (PyTorch's default is $$10^{-5}$$) that keeps the division finite. $$\gamma, \beta$$ are a learned scale and shift, one per channel or feature, which let the network undo the normalization if it wants to. One detail matters if you ever check your own code against PyTorch: the variance is the biased one, divided by $$\lvert S(x)\rvert$$ and not $$\lvert S(x)\rvert - 1$$. Every library norm layer does it this way.
 
 With the formula fixed, the five layers differ only in $$S$$:
 

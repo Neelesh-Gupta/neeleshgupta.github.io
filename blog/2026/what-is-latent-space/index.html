@@ -1,4 +1,27 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd"> <html> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <style>
+<!DOCTYPE html> <html lang="en"> <head> <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> <meta charset="utf-8"> <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"> <meta http-equiv="X-UA-Compatible" content="IE=edge"> <title> What is Latent Space? Everyone talks about it, no one really explains it | Neelesh Gupta </title> <meta name="author" content="Neelesh Gupta"> <meta name="description" content="What a latent space actually is: a learned coordinate chart on the data manifold, worked through with intrinsic dimension, PCA, autoencoders and why a circle has to tear."> <meta name="keywords" content="Neelesh Gupta, machine learning, computer vision, geometric deep learning, graph neural networks, AI for science, continual learning"> <meta property="og:site_name" content="Neelesh Gupta"> <meta property="og:type" content="article"> <meta property="og:title" content="Neelesh Gupta | What is Latent Space? Everyone talks about it, no one really explains it"> <meta property="og:url" content="https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/what-is-latent-space/"> <meta property="og:description" content="What a latent space actually is: a learned coordinate chart on the data manifold, worked through with intrinsic dimension, PCA, autoencoders and why a circle has to tear."> <meta property="og:image" content="https://neelesh-gupta.github.io/neeleshgupta.github.io/assets/img/neelesh_iit_roorkee.jpg"> <meta property="og:locale" content="en"> <meta name="twitter:card" content="summary"> <meta name="twitter:title" content="What is Latent Space? Everyone talks about it, no one really explains it"> <meta name="twitter:description" content="What a latent space actually is: a learned coordinate chart on the data manifold, worked through with intrinsic dimension, PCA, autoencoders and why a circle has to tear."> <meta name="twitter:image" content="https://neelesh-gupta.github.io/neeleshgupta.github.io/assets/img/neelesh_iit_roorkee.jpg"> <script type="application/ld+json">
+    {
+        "author":
+        {
+            "@type": "Person",
+            "name": "Neelesh Gupta"
+        },
+        "url": "https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/what-is-latent-space/",
+        "@type": "BlogPosting",
+        "description": "What a latent space actually is: a learned coordinate chart on the data manifold, worked through with intrinsic dimension, PCA, autoencoders and why a circle has to tear.",
+        "headline": "What is Latent Space? Everyone talks about it, no one really explains it",
+        
+        "sameAs": ["https://scholar.google.com/citations?user=JXLzjDsAAAAJ","https://github.com/Neelesh-Gupta","https://www.linkedin.com/in/neelesh-gupta-92b2bb2b5",null],
+        
+        "name": "Neelesh Gupta",
+        "@context": "https://schema.org"
+    }
+  </script> <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' data: https:; font-src 'self' data: https:; media-src 'self' https:; frame-src 'self' https:; connect-src 'self' https:;"> <style>
+  :root {
+    --max-content-width: 930px;
+  }
+</style> <link rel="stylesheet" href="/neeleshgupta.github.io/assets/css/tailwind.css?v=50c64c15cbb9fd1ce6056fdb8bcb4b62"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tocbot@4.36.4/dist/tocbot.css" integrity="sha256-zTN0r+0OKaIv2xqeNNIYxNk0pWJ6+IqPGc1iDgVzWF0=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css" integrity="sha256-MVopmdyC2tYTiJ8wlktf0uh0v4NgT+vNdyVFepi7Q0c=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/academicons@1.9.5/css/academicons.min.css" integrity="sha256-SzrCOBJbGVFMahewkgjwnApaV2+av1DwMAA+/QGLyZw=" crossorigin="anonymous"> <link defer rel="stylesheet" href="https://cdn.jsdelivr.net/npm/scholar-icons@1.0.3/css/scholar-icons.css" integrity="sha256-VY3hHVj/hNX3fYG6wtbA6TcKJQl7+FthzGSyIB64klY=" crossorigin="anonymous"> <link defer rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:100,300,400,500,700|Material+Icons&amp;display=swap"> <link defer rel="stylesheet" href="/neeleshgupta.github.io/assets/css/jekyll-pygments-themes-github.css?v=591dab5a4e56573bf4ef7fd332894c99" media="" id="highlight_theme_light"> <link rel="shortcut icon" href="data:image/svg+xml,&lt;svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%20100%20100%22&gt;&lt;text%20y=%22.9em%22%20font-size=%2290%22&gt;%F0%9F%A7%A0&lt;/text&gt;&lt;/svg&gt;"> <link rel="stylesheet" href="/neeleshgupta.github.io/assets/css/main.css?v=3116ba77db9ee1581d05bb3e86fbf7f1"> <link rel="canonical" href="https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/what-is-latent-space/"> <script src="/neeleshgupta.github.io/assets/js/theme.js?v=5286c3e4c334d0ecb8fc0c40ff4fa7ec"></script> <link defer rel="stylesheet" href="/neeleshgupta.github.io/assets/css/jekyll-pygments-themes-native.css?v=5847e5ed4a4568527aa6cfab446049ca" media="none" id="highlight_theme_dark"> <script>
+    initTheme();
+  </script> </head> <body class="fixed-top-nav sticky-bottom-footer"> <header> <nav id="navbar" class="navbar navbar-light navbar-expand-sm fixed-top" role="navigation"> <div class="container"> <a class="navbar-brand title font-weight-lighter" href="/neeleshgupta.github.io/"> <span class="font-weight-bold">Neelesh</span> Gupta </a> <button class="navbar-toggler collapsed navbar-toggler-main" type="button" data-nav-toggle="navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"> <span class="sr-only">Toggle navigation</span> <span class="icon-bar top-bar"></span> <span class="icon-bar middle-bar"></span> <span class="icon-bar bottom-bar"></span> </button> <div class="collapse navbar-collapse navbar-collapse-main" id="navbarNav"> <ul class="navbar-nav navbar-menu-list flex-nowrap"> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/">About </a> </li> <li class="nav-item active"> <a class="nav-link" href="/neeleshgupta.github.io/blog/">Blog </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/publications/">Publications </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/projects/">Projects </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/repositories/">Repositories </a> </li> <li class="nav-item "> <a class="nav-link" href="/neeleshgupta.github.io/cv/">CV </a> </li> <li class="nav-item"> <button id="search-toggle" type="button" title="Search" aria-label="Open search"> <span class="nav-link"><i class="fa-solid fa-magnifying-glass"></i></span> </button> </li> <li class="toggle-container"> <button id="light-toggle" type="button" title="Change theme" aria-label="Change color theme"> <i class="fa-half-sun-moon" id="light-toggle-system"></i> <i class="fa-solid fa-moon" id="light-toggle-dark"></i> <i class="fa-solid fa-sun" id="light-toggle-light"></i> </button> </li> </ul> </div> </div> </nav> <progress id="progress" value="0"> <div class="progress-container"> <span class="progress-bar"></span> </div> </progress> </header> <div class="container mt-5" role="main"> <div class="row"> <div class="col-sm-3"> <nav id="toc-sidebar" class="sticky-top toc toc-sidebar" aria-label="Table of contents" data-toc-collapse="expanded" data-toc-collapse-depth=""></nav> </div> <div class="col-sm-9"> <div class="post"> <header class="post-header"> <h1 class="post-title">What is Latent Space? Everyone talks about it, no one really explains it</h1> <p class="post-meta"> Created on November 21, 2026 </p> <p class="post-tags"> <a href="/neeleshgupta.github.io/blog/2026"> <i class="fa-solid fa-calendar fa-sm"></i> 2026 </a>   ·   <a href="/neeleshgupta.github.io/blog/tag/latent-space"> <i class="fa-solid fa-hashtag fa-sm"></i> latent-space</a>   <a href="/neeleshgupta.github.io/blog/tag/autoencoders"> <i class="fa-solid fa-hashtag fa-sm"></i> autoencoders</a>   <a href="/neeleshgupta.github.io/blog/tag/manifolds"> <i class="fa-solid fa-hashtag fa-sm"></i> manifolds</a>   <a href="/neeleshgupta.github.io/blog/tag/pca"> <i class="fa-solid fa-hashtag fa-sm"></i> pca</a>   <a href="/neeleshgupta.github.io/blog/tag/representation-learning"> <i class="fa-solid fa-hashtag fa-sm"></i> representation-learning</a>   ·   <a href="/neeleshgupta.github.io/blog/category/machine-learning"> <i class="fa-solid fa-tag fa-sm"></i> machine-learning</a> </p> </header> <article class="post-content"> <div id="markdown-content"> <style>
   /* This post only: use the window's width so code, equations and figures fit without sideways scrolling. */
   @media (min-width: 576px) {
     .container[role="main"], .navbar .container, footer .container { max-width: min(calc(100vw - 32px), 1520px); }
@@ -13,7 +36,7 @@
   @media (max-width: 575px) {
     .post-content mjx-container[display] { font-size: 90% !important; }
   }
-</style> </head> <body> <p>Latent space is one of those terms that turns up everywhere in machine learning. Stable Diffusion generates its images inside one. A VAE samples from one. People talk about walking through a latent space to morph one face into another, and about an LLM’s latent space as if it were a place you could visit. Ask what a latent space actually <em>is</em>, though, and you usually get a sentence: a compressed representation of the data, a lower-dimensional encoding.</p> <p>That sentence is true as far as it goes. What it can’t tell you is why some latent spaces are pleasant to move around in while others are full of garbage, why interpolating between two codes sometimes gives a clean blend and sometimes nonsense, or why people keep reaching for an odd-looking formula called SLERP when they interpolate. Answering those questions takes a geometric picture, and building that picture is what this four-part series is for. The thread running through all of it is one idea: a path through latent space is only as good as the region the decoder was trained on.</p> <p>This first part asks the most basic question, what a latent space is, and answers it with coordinates for the thin, curved surface that real data lives on. Each idea comes four ways: an intuition you can hold in your head, a picture of the geometry, the maths that makes it precise, and a short code cell that checks the maths on real numbers. You’ll want to be comfortable with neural networks, MSE training and the SVD. You won’t need any differential geometry, because the little we use gets built from maps of the Earth.</p> <h2 id="static-vs-blobs-almost-every-image-is-noise">Static vs. blobs: almost every image is noise</h2> <p>Here are two 28×28 grayscale images. The first is TV static, every pixel drawn at random from [0, 1]. The second is a soft white blob on a black background. To your eye they have nothing in common. To a computer they’re the same kind of thing: a list of 784 numbers, or one point in \(\mathbb{R}^{784}\).</p> <p>Now draw 28×28 images uniformly at random and count how many look like anything at all. None will. You could keep drawing for the rest of your life and get nothing but static, because the images we care about sit in a sliver of pixel space so thin that random sampling never lands in it. This post is about putting coordinates on that sliver.</p> <p>For that I want a dataset where I already know the right answer. Blob World, which I’ll use for the whole series, is about as simple as images get: a Gaussian blob of width \(s = 2\) pixels whose centre \((c_x, c_y)\) is drawn uniformly from \([4, 24]^2\),</p> \[I_c(u, v) = \exp\!\left(-\frac{(u - c_x)^2 + (v - c_y)^2}{2s^2}\right),\] <p>where \((u, v)\) is the pixel position. Every image has 784 pixels, but two numbers are enough to make one. Those two numbers, \((c_x, c_y)\), are the ground truth we’ll try to recover later. The setup cell defines <code class="language-plaintext highlighter-rouge">blob()</code>, two more toy datasets we’ll need further on (Sized Blob and Clock Hand), and the <code class="language-plaintext highlighter-rouge">AE</code> class.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="sh">"</span><span class="s">numpy==2.3.3</span><span class="sh">"</span> <span class="sh">"</span><span class="s">torch==2.13.0</span><span class="sh">"</span> <span class="sh">"</span><span class="s">torchvision==0.28.0</span><span class="sh">"</span> <span class="sh">"</span><span class="s">scikit-learn==1.6.1</span><span class="sh">"</span> <span class="sh">"</span><span class="s">matplotlib==3.10.8</span><span class="sh">"</span>
+</style> <p>Latent space is one of those terms that turns up everywhere in machine learning. Stable Diffusion generates its images inside one. A VAE samples from one. People talk about walking through a latent space to morph one face into another, and about an LLM’s latent space as if it were a place you could visit. Ask what a latent space actually <em>is</em>, though, and you usually get a sentence: a compressed representation of the data, a lower-dimensional encoding.</p> <p>That sentence is true as far as it goes. What it can’t tell you is why some latent spaces are pleasant to move around in while others are full of garbage, why interpolating between two codes sometimes gives a clean blend and sometimes nonsense, or why people keep reaching for an odd-looking formula called SLERP when they interpolate. Answering those questions takes a geometric picture, and building that picture is what this four-part series is for. The thread running through all of it is one idea: a path through latent space is only as good as the region the decoder was trained on.</p> <p>This first part asks the most basic question, what a latent space is, and answers it with coordinates for the thin, curved surface that real data lives on. Each idea comes four ways: an intuition you can hold in your head, a picture of the geometry, the maths that makes it precise, and a short code cell that checks the maths on real numbers. You’ll want to be comfortable with neural networks, MSE training and the SVD. You won’t need any differential geometry, because the little we use gets built from maps of the Earth.</p> <h2 id="static-vs-blobs-almost-every-image-is-noise">Static vs. blobs: almost every image is noise</h2> <p>Here are two 28×28 grayscale images. The first is TV static, every pixel drawn at random from [0, 1]. The second is a soft white blob on a black background. To your eye they have nothing in common. To a computer they’re the same kind of thing: a list of 784 numbers, or one point in \(\mathbb{R}^{784}\).</p> <p>Now draw 28×28 images uniformly at random and count how many look like anything at all. None will. You could keep drawing for the rest of your life and get nothing but static, because the images we care about sit in a sliver of pixel space so thin that random sampling never lands in it. This post is about putting coordinates on that sliver.</p> <p>For that I want a dataset where I already know the right answer. Blob World, which I’ll use for the whole series, is about as simple as images get: a Gaussian blob of width \(s = 2\) pixels whose centre \((c_x, c_y)\) is drawn uniformly from \([4, 24]^2\),</p> \[I_c(u, v) = \exp\!\left(-\frac{(u - c_x)^2 + (v - c_y)^2}{2s^2}\right),\] <p>where \((u, v)\) is the pixel position. Every image has 784 pixels, but two numbers are enough to make one. Those two numbers, \((c_x, c_y)\), are the ground truth we’ll try to recover later. The setup cell defines <code class="language-plaintext highlighter-rouge">blob()</code>, two more toy datasets we’ll need further on (Sized Blob and Clock Hand), and the <code class="language-plaintext highlighter-rouge">AE</code> class.</p> <div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">%</span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">q</span> <span class="sh">"</span><span class="s">numpy==2.3.3</span><span class="sh">"</span> <span class="sh">"</span><span class="s">torch==2.13.0</span><span class="sh">"</span> <span class="sh">"</span><span class="s">torchvision==0.28.0</span><span class="sh">"</span> <span class="sh">"</span><span class="s">scikit-learn==1.6.1</span><span class="sh">"</span> <span class="sh">"</span><span class="s">matplotlib==3.10.8</span><span class="sh">"</span>
 <span class="kn">import</span> <span class="n">numpy</span> <span class="k">as</span> <span class="n">np</span>
 <span class="kn">import</span> <span class="n">torch</span>
 <span class="kn">import</span> <span class="n">torch.nn</span> <span class="k">as</span> <span class="n">nn</span>
@@ -249,4 +272,246 @@ PCA-2  -&gt; true (x, y):  linear R^2 = 0.758 | 10-NN R^2 = 0.921
 </code></pre></div></div> <div class="language-text highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AE(d=1)  max speed =   65.1 x median, between angles 273.8 and 274.0 deg | recon MSE 0.00593
 AE(d=2)  max speed =    1.7 x median, between angles 147.2 and 147.3 deg | recon MSE 0.00031
 PCA-2    max speed =    1.6 x median, between angles  26.2 and  27.2 deg
-</code></pre></div></div> <p><img src="/neeleshgupta.github.io/assets/blog/what-is-latent-space/cell-07-out-1.png" alt="Output of cell 7" class="img-fluid rounded z-depth-1" style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"></p> <p class="caption"><em>What the figure shows. Left: the 1-D autoencoder’s single code number for every hand angle; the sudden drop just past 265° is the tear. Middle: with two code numbers, the codes form a closed loop that goes all the way round with no break. Right: PCA’s two directions also give a closed loop. Colour shows the true angle, and the coral circles mark where each chart moves fastest.</em></p> <p>The 1-D autoencoder tears, as it has to. Its speed spikes to 65.1 times the median between 273.8° and 274.0°, the steepest step of a cliff in the left panel where, over about 11 degrees from 267° to 278°, the code drops from about 20 to about −7. It folds as well. The code bottoms out at about −17 near 347° and climbs back up through 0°, so 310° and 1.4° end up with the same code (about −9.3), and the cliff itself crosses codes already used elsewhere, landing 274° on the same code as 179°. You can see the damage in its reconstruction error, 0.00593, which is 19 times the 2-D model’s.</p> <p>Give the autoencoder a second dimension and the problem goes away. With \(d = 2\) its peak speed is 1.7 times the median, which is ordinary variation, and its codes form a closed ring with the colours running continuously all the way round. PCA-2 closes the ring too (1.6×), so what blocked the 1-D chart was the number of dimensions rather than linearity. The coral circles on the two rings only mark where they stretch a little faster.</p> <p>Activation functions matter here as well. With ReLU, the 2-D autoencoder left the ring open on five seeds out of five in my runs and still reconstructed almost perfectly. A second dimension makes a tear-free chart possible, but nothing in the loss makes the network find it. The data’s topology decides which charts exist, and a loss that only ever looks at data points decides which one you end up with.</p> <h2 id="what-latent-spaces-buy-you">What latent spaces buy you</h2> <p>The most concrete payoff is compute. <a href="https://arxiv.org/abs/2112.10752" rel="external nofollow noopener" target="_blank">Latent diffusion</a> runs the expensive generative model inside an autoencoder’s latent space. <a href="https://huggingface.co/CompVis/stable-diffusion-v1-4" rel="external nofollow noopener" target="_blank">Stable Diffusion</a> downsamples by a factor of 8 into 4 channels, which turns a 512×512×3 image (786,432 numbers) into a 64×64×4 latent (16,384) and leaves the denoiser 48 times fewer numbers to work with.</p> <p>The geometry pays off as well. Because nearby codes decode to nearby data, directions in a good latent space are moves along the manifold, and nearest-neighbour search compares positions on the sheet instead of the saturated pixel distances we saw earlier. Train an autoencoder to undo noise, and encoding then decoding pulls a corrupted image back towards \(\mathcal{M}\). Pick any point, decode it, and you get data, provided the decoder was trained somewhere near there.</p> <blockquote> <p><strong>A t-SNE or UMAP plot is not a latent space.</strong> <a href="https://www.jmlr.org/papers/v9/vandermaaten08a.html" rel="external nofollow noopener" target="_blank">t-SNE</a> and <a href="https://arxiv.org/abs/1802.03426" rel="external nofollow noopener" target="_blank">UMAP</a> try to keep local neighbourhoods intact when they squash data into 2-D. That’s all they promise. There’s no decoder, and global distances aren’t preserved (cluster sizes and the gaps between clusters can mean very little). Standard t-SNE can’t even place a new point without re-running the optimisation; UMAP can, through a built-in transform, but still has no way back to the data. So a t-SNE plot of a network’s features is a picture of neighbourhoods in its latent space, drawn with a different ruler.</p> </blockquote> <h2 id="recent-work">Recent work</h2> <p>If you read one thing after this post, make it <a href="https://arxiv.org/abs/2404.02954" rel="external nofollow noopener" target="_blank">Loaiza-Ganem et al. (2024, TMLR)</a>. It’s a survey that sorts deep generative models by whether they account for data living on a low-dimensional manifold, and two-step models like latent diffusion, which learn a representation first and model the distribution inside it second, fit its framework naturally.</p> <p>Diffusion models can estimate \(k\) themselves. <a href="https://arxiv.org/abs/2212.12611" rel="external nofollow noopener" target="_blank">Stanczuk et al. (ICML 2024)</a> show that a diffusion model’s score at small noise levels points back towards the manifold, which reveals \(k\). <a href="https://arxiv.org/abs/2406.03537" rel="external nofollow noopener" target="_blank">Kamkari et al. (NeurIPS 2024)</a> turned that into FLIPD, a fast estimate for each individual data point, which makes the “dimension varies across the data” caveat something you can measure. Both do TwoNN’s job at the scale of real image models.</p> <p>Learned representations have intrinsic dimensions too. <a href="https://arxiv.org/abs/2405.15471" rel="external nofollow noopener" target="_blank">Cheng et al. (ICLR 2025)</a> track it layer by layer in language models and find a distinct high-dimensional phase in the middle of the network. The shape of the chart also matters for generation: <a href="https://arxiv.org/abs/2501.01423" rel="external nofollow noopener" target="_blank">Yao et al. (2025)</a> find that giving a tokenizer a higher-dimensional latent improves reconstruction but hurts generation at a fixed model size and training budget, and that aligning the latent with a pretrained vision model such as DINOv2 closes much of that gap.</p> <h2 id="what-happens-between-the-data-points">What happens between the data points?</h2> <p>So a latent space is a learned chart. The encoder gives every point on the data manifold a coordinate, and perfect reconstruction makes the decoder that chart’s inverse. Along the way we measured the manifold’s dimension (2.01 for Blob World, 13.35 for MNIST), watched PCA fold it, watched an autoencoder recover it (\(R^2 = 1.000\)), and watched a circle force a 1-D chart to tear.</p> <p>Every one of those checks happened at the data points and nowhere else. Try this, then. Take two training images, encode them, and walk in a straight line between their codes. Halfway along you’re at a code that belongs to no training image. What does the decoder show you there? Sometimes a perfectly good image, sometimes garbage, and working out why is the job of <strong>Part 2: why averaging pixels gives you a ghost, while averaging latents gives you a hybrid.</strong></p> <h2 id="further-reading">Further reading</h2> <ul> <li> <a href="https://arxiv.org/abs/2104.08894" rel="external nofollow noopener" target="_blank">Pope et al., 2021</a>: measured intrinsic dimensions of standard image datasets, and why they matter for learning.</li> <li> <a href="https://arxiv.org/abs/1803.06992" rel="external nofollow noopener" target="_blank">Facco et al., 2017</a>: the TwoNN paper, short, with derivation and robustness checks.</li> <li> <a href="https://arxiv.org/abs/2404.02954" rel="external nofollow noopener" target="_blank">Loaiza-Ganem et al., 2024</a>: generative models through the manifold hypothesis.</li> <li> <a href="https://arxiv.org/abs/1206.5538" rel="external nofollow noopener" target="_blank">Bengio, Courville &amp; Vincent, 2013</a>: the classic representation-learning review that put manifolds at the centre.</li> </ul> </body> </html>
+</code></pre></div></div> <p><img src="/neeleshgupta.github.io/assets/blog/what-is-latent-space/cell-07-out-1.png" alt="Output of cell 7" class="img-fluid rounded z-depth-1" style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"></p> <p class="caption"><em>What the figure shows. Left: the 1-D autoencoder’s single code number for every hand angle; the sudden drop just past 265° is the tear. Middle: with two code numbers, the codes form a closed loop that goes all the way round with no break. Right: PCA’s two directions also give a closed loop. Colour shows the true angle, and the coral circles mark where each chart moves fastest.</em></p> <p>The 1-D autoencoder tears, as it has to. Its speed spikes to 65.1 times the median between 273.8° and 274.0°, the steepest step of a cliff in the left panel where, over about 11 degrees from 267° to 278°, the code drops from about 20 to about −7. It folds as well. The code bottoms out at about −17 near 347° and climbs back up through 0°, so 310° and 1.4° end up with the same code (about −9.3), and the cliff itself crosses codes already used elsewhere, landing 274° on the same code as 179°. You can see the damage in its reconstruction error, 0.00593, which is 19 times the 2-D model’s.</p> <p>Give the autoencoder a second dimension and the problem goes away. With \(d = 2\) its peak speed is 1.7 times the median, which is ordinary variation, and its codes form a closed ring with the colours running continuously all the way round. PCA-2 closes the ring too (1.6×), so what blocked the 1-D chart was the number of dimensions rather than linearity. The coral circles on the two rings only mark where they stretch a little faster.</p> <p>Activation functions matter here as well. With ReLU, the 2-D autoencoder left the ring open on five seeds out of five in my runs and still reconstructed almost perfectly. A second dimension makes a tear-free chart possible, but nothing in the loss makes the network find it. The data’s topology decides which charts exist, and a loss that only ever looks at data points decides which one you end up with.</p> <h2 id="what-latent-spaces-buy-you">What latent spaces buy you</h2> <p>The most concrete payoff is compute. <a href="https://arxiv.org/abs/2112.10752" rel="external nofollow noopener" target="_blank">Latent diffusion</a> runs the expensive generative model inside an autoencoder’s latent space. <a href="https://huggingface.co/CompVis/stable-diffusion-v1-4" rel="external nofollow noopener" target="_blank">Stable Diffusion</a> downsamples by a factor of 8 into 4 channels, which turns a 512×512×3 image (786,432 numbers) into a 64×64×4 latent (16,384) and leaves the denoiser 48 times fewer numbers to work with.</p> <p>The geometry pays off as well. Because nearby codes decode to nearby data, directions in a good latent space are moves along the manifold, and nearest-neighbour search compares positions on the sheet instead of the saturated pixel distances we saw earlier. Train an autoencoder to undo noise, and encoding then decoding pulls a corrupted image back towards \(\mathcal{M}\). Pick any point, decode it, and you get data, provided the decoder was trained somewhere near there.</p> <blockquote> <p><strong>A t-SNE or UMAP plot is not a latent space.</strong> <a href="https://www.jmlr.org/papers/v9/vandermaaten08a.html" rel="external nofollow noopener" target="_blank">t-SNE</a> and <a href="https://arxiv.org/abs/1802.03426" rel="external nofollow noopener" target="_blank">UMAP</a> try to keep local neighbourhoods intact when they squash data into 2-D. That’s all they promise. There’s no decoder, and global distances aren’t preserved (cluster sizes and the gaps between clusters can mean very little). Standard t-SNE can’t even place a new point without re-running the optimisation; UMAP can, through a built-in transform, but still has no way back to the data. So a t-SNE plot of a network’s features is a picture of neighbourhoods in its latent space, drawn with a different ruler.</p> </blockquote> <h2 id="recent-work">Recent work</h2> <p>If you read one thing after this post, make it <a href="https://arxiv.org/abs/2404.02954" rel="external nofollow noopener" target="_blank">Loaiza-Ganem et al. (2024, TMLR)</a>. It’s a survey that sorts deep generative models by whether they account for data living on a low-dimensional manifold, and two-step models like latent diffusion, which learn a representation first and model the distribution inside it second, fit its framework naturally.</p> <p>Diffusion models can estimate \(k\) themselves. <a href="https://arxiv.org/abs/2212.12611" rel="external nofollow noopener" target="_blank">Stanczuk et al. (ICML 2024)</a> show that a diffusion model’s score at small noise levels points back towards the manifold, which reveals \(k\). <a href="https://arxiv.org/abs/2406.03537" rel="external nofollow noopener" target="_blank">Kamkari et al. (NeurIPS 2024)</a> turned that into FLIPD, a fast estimate for each individual data point, which makes the “dimension varies across the data” caveat something you can measure. Both do TwoNN’s job at the scale of real image models.</p> <p>Learned representations have intrinsic dimensions too. <a href="https://arxiv.org/abs/2405.15471" rel="external nofollow noopener" target="_blank">Cheng et al. (ICLR 2025)</a> track it layer by layer in language models and find a distinct high-dimensional phase in the middle of the network. The shape of the chart also matters for generation: <a href="https://arxiv.org/abs/2501.01423" rel="external nofollow noopener" target="_blank">Yao et al. (2025)</a> find that giving a tokenizer a higher-dimensional latent improves reconstruction but hurts generation at a fixed model size and training budget, and that aligning the latent with a pretrained vision model such as DINOv2 closes much of that gap.</p> <h2 id="what-happens-between-the-data-points">What happens between the data points?</h2> <p>So a latent space is a learned chart. The encoder gives every point on the data manifold a coordinate, and perfect reconstruction makes the decoder that chart’s inverse. Along the way we measured the manifold’s dimension (2.01 for Blob World, 13.35 for MNIST), watched PCA fold it, watched an autoencoder recover it (\(R^2 = 1.000\)), and watched a circle force a 1-D chart to tear.</p> <p>Every one of those checks happened at the data points and nowhere else. Try this, then. Take two training images, encode them, and walk in a straight line between their codes. Halfway along you’re at a code that belongs to no training image. What does the decoder show you there? Sometimes a perfectly good image, sometimes garbage, and working out why is the job of <strong>Part 2: why averaging pixels gives you a ghost, while averaging latents gives you a hybrid.</strong></p> <h2 id="further-reading">Further reading</h2> <ul> <li> <a href="https://arxiv.org/abs/2104.08894" rel="external nofollow noopener" target="_blank">Pope et al., 2021</a>: measured intrinsic dimensions of standard image datasets, and why they matter for learning.</li> <li> <a href="https://arxiv.org/abs/1803.06992" rel="external nofollow noopener" target="_blank">Facco et al., 2017</a>: the TwoNN paper, short, with derivation and robustness checks.</li> <li> <a href="https://arxiv.org/abs/2404.02954" rel="external nofollow noopener" target="_blank">Loaiza-Ganem et al., 2024</a>: generative models through the manifold hypothesis.</li> <li> <a href="https://arxiv.org/abs/1206.5538" rel="external nofollow noopener" target="_blank">Bengio, Courville &amp; Vincent, 2013</a>: the classic representation-learning review that put manifolds at the centre.</li> </ul> </div> </article> </div> </div> </div> </div> <script>
+  window.alFolio = {
+    compatBootstrap: false
+  };
+</script> <script src="/neeleshgupta.github.io/assets/js/nav-toggle.js?v=141bd79a73ebc0f0b6ea58e440ae79fc"></script> <script defer src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js" integrity="sha256-Nn1q/fx0H7SNLZMQ5Hw5JLaTRZp0yILA/FRexe19VdI=" crossorigin="anonymous"></script> <script defer src="https://cdn.jsdelivr.net/npm/imagesloaded@5.0.0/imagesloaded.pkgd.min.js" integrity="sha256-htrLFfZJ6v5udOG+3kNLINIKh2gvoKqwEhHYfTTMICc=" crossorigin="anonymous"></script> <script defer src="/neeleshgupta.github.io/assets/js/masonry.js?v=e49affc7bd2646f6acdad1dbe02c2359" type="text/javascript"></script> <script defer type="text/javascript" id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js" integrity="sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI=" crossorigin="anonymous"></script> <script src="/neeleshgupta.github.io/assets/al_math/js/mathjax-setup.js"></script> <script src="/neeleshgupta.github.io/assets/js/tooltips-setup.js?v=fe487e99db6c43751e6e7bdb2d6a0611"></script> <script defer src="https://cdn.jsdelivr.net/npm/tocbot@4.36.4/dist/tocbot.min.js" integrity="sha256-lo/r+jQ81wWrxdIiiiEEd538z4+dTJTt+leOuAS7GCw=" crossorigin="anonymous"></script> <script src="/neeleshgupta.github.io/assets/js/no_defer.js?v=53b1b1a645525975c963ce8bf8bfefcf"></script> <script defer src="/neeleshgupta.github.io/assets/js/common.js?v=87baac90f765f2f3362dcf6aaf312a8a"></script> <script defer src="/neeleshgupta.github.io/assets/js/copy_code.js?v=c8a01c11a92744d44b093fc3bda915df" type="text/javascript"></script> <script defer src="/neeleshgupta.github.io/assets/js/jupyter_new_tab.js?v=896d254890d9b47f0281f63bfccf0dee"></script> <script defer src="https://cdn.jsdelivr.net/npm/medium-zoom@1.1.0/dist/medium-zoom.min.js" integrity="sha256-ZgMyDAIYDYGxbcpJcfUnYwNevG/xi9OHKaR/8GK+jWc=" crossorigin="anonymous"></script> <script defer src="/neeleshgupta.github.io/assets/al_img_tools/js/zoom.js"></script> <script defer src="/neeleshgupta.github.io/assets/js/progress-bar.js?v=499464c5c63ced6cf7ad62509f1e2610" type="text/javascript"></script> <script src="https://cdn.jsdelivr.net/npm/vanilla-back-to-top@7.2.1/dist/vanilla-back-to-top.min.js" integrity="sha256-uMJJ3EoTyfRBoTbR+lrfu1uRQ87RZG8AR3cVNuQVeFg=" crossorigin="anonymous"></script> <script>
+    addBackToTop();
+  </script> <script type="module" src="/neeleshgupta.github.io/assets/al_search/js/search/ninja-keys.min.js"></script> <ninja-keys hidebreadcrumbs noautoloadmdicons placeholder="Type to start searching"></ninja-keys> <script src="/neeleshgupta.github.io/assets/al_search/js/search-setup.js"></script> <script>
+// get the ninja-keys element
+const ninja = document.querySelector('ninja-keys');
+
+// add the home and posts menu items
+ninja.data = [{
+    id: "nav-about",
+    title: "About",
+    section: "Navigation",
+    handler: () => {
+      window.location.href = "/neeleshgupta.github.io/";
+    },
+  },{id: "nav-blog",
+          title: "Blog",
+          description: "",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/blog/";
+          },
+        },{id: "nav-publications",
+          title: "Publications",
+          description: "publications in reverse chronological order. see also Google Scholar.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/publications/";
+          },
+        },{id: "nav-projects",
+          title: "Projects",
+          description: "research and engineering work, from cryo-ET segmentation to power-grid learning.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/projects/";
+          },
+        },{id: "nav-repositories",
+          title: "Repositories",
+          description: "selected code from my GitHub.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/repositories/";
+          },
+        },{id: "nav-cv",
+          title: "CV",
+          description: "Download the PDF version with the icon on the right.",
+          section: "Navigation",
+          handler: () => {
+            window.location.href = "/neeleshgupta.github.io/cv/";
+          },
+        },{id: "post-what-is-latent-space-everyone-talks-about-it-no-one-really-explains-it",
+        
+          title: "What is Latent Space? Everyone talks about it, no one really explains it...",
+        
+        description: "What a latent space actually is: a learned coordinate chart on the data manifold, worked through with intrinsic dimension, PCA, autoencoders and why a circle has to tear.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/what-is-latent-space/";
+          
+        },
+      },{id: "post-why-does-an-llm-take-so-long-to-say-the-first-word-then-answer-almost-instantly",
+        
+          title: "Why Does an LLM Take So Long to Say the First Word, Then...",
+        
+        description: "Why an LLM pauses before its first word and then streams the rest, worked through with FLOP counts, the roofline model and a 70B-on-H100 estimate.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/llm-first-word-latency/";
+          
+        },
+      },{id: "post-why-the-correct-setting-makes-worse-images-the-strange-math-of-classifier-free-guidance",
+        
+          title: "Why the “Correct” Setting Makes Worse Images: The Strange Math of Classifier-Free Guidance...",
+        
+        description: "Why the mathematically correct guidance setting makes the worst images, why classifier-free guidance misses the distribution it seems to target, and where exact toy models show it helping and hurting.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/strange-math-of-cfg/";
+          
+        },
+      },{id: "post-decoders-cost-more-than-encoders-so-why-is-almost-every-llm-a-decoder",
+        
+          title: "Decoders Cost More Than Encoders. So Why Is Almost Every LLM a Decoder?...",
+        
+        description: "Why a decoder pays far more per generated token than an encoder pays per input token, and why the industry builds decoder-only models anyway, through roofline math, KV-cache arithmetic and runnable code.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/decoder-vs-encoder-cost/";
+          
+        },
+      },{id: "post-why-batch-norm-struggles-inside-transformers",
+        
+          title: "Why Batch Norm struggles inside transformers!",
+        
+        description: "Why CNNs normalize over the batch and transformers normalize each token, explained through geometry, the math of one shared formula, and runnable PyTorch code.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/batch-norm-transformers/";
+          
+        },
+      },{id: "post-if-weight-quantization-degrades-reasoning-why-is-it-the-industry-standard-for-llm-scaling",
+        
+          title: "If Weight Quantization Degrades Reasoning, Why Is It the Industry Standard for LLM...",
+        
+        description: "Why 4-bit weights hurt reasoning, why the industry quantizes anyway, and how PTQ, QAT and mixed-precision QAT fit together, with NumPy code you can run in Google Colab.",
+        section: "Posts",
+        handler: () => {
+          
+            window.location.href = "/neeleshgupta.github.io/blog/2026/weight-quantization-reasoning/";
+          
+        },
+      },{id: "news-our-paper-on-gnss-jamming-detection-with-deep-learning-was-presented-at-ieee-gcwcn-2025-https-ieeexplore-ieee-org-document-11448371",
+          title: 'Our paper on GNSS jamming detection with deep learning was presented at [IEEE...',
+          description: "",
+          section: "News",},{id: "news-graduated-with-a-b-tech-in-electrical-engineering-from-nit-kurukshetra-mortar-board",
+          title: 'Graduated with a B.Tech in Electrical Engineering from NIT Kurukshetra. <img class="emoji" title=":mortar_board:" alt=":mortar_board:" src="https://github.githubassets.com/images/icons/emoji/unicode/1f393.png" height="20" width="20">',
+          description: "",
+          section: "News",},{id: "news-joined-sapientpriors-as-a-machine-learning-researcher-working-on-continual-learning-agents",
+          title: 'Joined SapientPriors as a Machine Learning Researcher, working on continual learning agents.',
+          description: "",
+          section: "News",},{id: "news-topofuse-https-arxiv-org-abs-2609-29717-topology-aware-tri-planar-fusion-for-3d-cryo-et-segmentation-is-accepted-at-eccv-2026-tada",
+          title: '[TopoFuse](https://arxiv.org/abs/2609.29717), topology-aware tri-planar fusion for 3D cryo-ET segmentation, is accepted at **ECCV 2026**....',
+          description: "",
+          section: "News",},{id: "news-blog-if-weight-quantization-degrades-reasoning-why-is-it-the-industry-standard-for-llm-scaling-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-weight-quantization-reasoning",
+          title: 'BLOG: [If Weight Quantization Degrades Reasoning, Why Is It the Industry Standard for...',
+          description: "",
+          section: "News",},{id: "news-blog-why-batch-norm-struggles-inside-transformers-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-batch-norm-transformers",
+          title: 'BLOG: [Why Batch Norm struggles inside transformers!](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/batch-norm-transformers/)',
+          description: "",
+          section: "News",},{id: "news-blog-decoders-cost-more-than-encoders-so-why-is-almost-every-llm-a-decoder-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-decoder-vs-encoder-cost",
+          title: 'BLOG: [Decoders Cost More Than Encoders. So Why Is Almost Every LLM a...',
+          description: "",
+          section: "News",},{id: "news-latest-blog-what-is-latent-space-everyone-talks-about-it-no-one-really-explains-it-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-what-is-latent-space",
+          title: 'LATEST BLOG: [What is Latent Space? Everyone talks about it, no one really...',
+          description: "",
+          section: "News",},{id: "news-blog-why-the-correct-setting-makes-worse-images-the-strange-math-of-classifier-free-guidance-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-strange-math-of-cfg",
+          title: 'BLOG: [Why the “Correct” Setting Makes Worse Images: The Strange Math of Classifier-Free...',
+          description: "",
+          section: "News",},{id: "news-latest-blog-why-does-an-llm-take-so-long-to-say-the-first-word-then-answer-almost-instantly-https-neelesh-gupta-github-io-neeleshgupta-github-io-blog-2026-llm-first-word-latency",
+          title: 'LATEST BLOG: [Why Does an LLM Take So Long to Say the First...',
+          description: "",
+          section: "News",},{id: "projects-topofuse",
+          title: 'TopoFuse',
+          description: "Topology-aware tri-planar fusion for 3D cryo-electron tomography segmentation. ECCV 2026.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/1_topofuse/";
+            },},{id: "projects-feasibility-guaranteed-grid-learning",
+          title: 'Feasibility-Guaranteed Grid Learning',
+          description: "A hybrid neural architecture that enforces 100% feasibility of power-grid constraints.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/2_grid_feasibility/";
+            },},{id: "projects-spatio-temporal-gnn-for-solar-forecasting",
+          title: 'Spatio-Temporal GNN for Solar Forecasting',
+          description: "Graph neural networks with topological features for solar-irradiance forecasting and grid stability.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/3_solar_gnn/";
+            },},{id: "projects-gnss-jamming-detection",
+          title: 'GNSS Jamming Detection',
+          description: "Bi-LSTM models that detect and classify radio-frequency jamming in satellite navigation signals. IEEE GCWCN 2025.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/4_gnss_jamming/";
+            },},{id: "projects-low-latency-vlm-inference",
+          title: 'Low-Latency VLM Inference',
+          description: "A vLLM serving pipeline for a fine-tuned QwenVL model with 38 ms inference latency.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/5_vlm_inference/";
+            },},{id: "projects-generative-diffusion-model",
+          title: 'Generative Diffusion Model',
+          description: "A from-scratch Denoising Diffusion Probabilistic Model for image synthesis, FID 12.37.",
+          section: "Projects",handler: () => {
+              window.location.href = "/neeleshgupta.github.io/projects/6_ddpm/";
+            },},{
+        id: 'social-email',
+        title: 'email',
+        section: 'Socials',
+        handler: () => {
+          window.open("mailto:%6E%65%65%6C%65%73%68%67%75%70%74%61%33%39%39@%67%6D%61%69%6C.%63%6F%6D", "_blank");
+        },
+      },{
+        id: 'social-scholar',
+        title: 'Google Scholar',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://scholar.google.com/citations?user=JXLzjDsAAAAJ", "_blank");
+        },
+      },{
+        id: 'social-github',
+        title: 'GitHub',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://github.com/Neelesh-Gupta", "_blank");
+        },
+      },{
+        id: 'social-linkedin',
+        title: 'LinkedIn',
+        section: 'Socials',
+        handler: () => {
+          window.open("https://www.linkedin.com/in/neelesh-gupta-92b2bb2b5", "_blank");
+        },
+      },{
+        id: 'social-cv',
+        title: 'CV',
+        section: 'Socials',
+        handler: () => {
+          window.open("/neeleshgupta.github.io/assets/pdf/Neelesh_Gupta_CV.pdf", "_blank");
+        },
+      },{
+      id: 'light-theme',
+      title: 'Change theme to light',
+      description: 'Change the theme of the site to Light',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("light");
+      },
+    },
+    {
+      id: 'dark-theme',
+      title: 'Change theme to dark',
+      description: 'Change the theme of the site to Dark',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("dark");
+      },
+    },
+    {
+      id: 'system-theme',
+      title: 'Use system default theme',
+      description: 'Change the theme of the site to System Default',
+      section: 'Theme',
+      handler: () => {
+        setThemeSetting("system");
+      },
+    },];
+
+</script> <script src="/neeleshgupta.github.io/assets/al_search/js/shortcut-key.js"></script> </body> </html>

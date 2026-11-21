@@ -184,7 +184,7 @@ $$
 \|I_a - I_b\|^2 = \int I_a^2 + \int I_b^2 - 2\int I_a I_b .
 $$
 
-Each self-term is a Gaussian integral, $$\int e^{-r^2/s^2} = \pi s^2$$. The cross-term needs one small trick. Let $$m$$ be the midpoint between the two centres; then $$|p - a|^2 + |p - b|^2 = 2|p - m|^2 + \delta^2/2$$ for any pixel position $$p$$, and the integral collapses to a single Gaussian times a constant:
+Each self-term is a Gaussian integral, $$\int e^{-r^2/s^2} = \pi s^2$$. The cross-term needs one small trick. Let $$m$$ be the midpoint between the two centres; then $$\lvert p - a\rvert^2 + \lvert p - b\rvert^2 = 2\lvert p - m\rvert^2 + \delta^2/2$$ for any pixel position $$p$$, and the integral collapses to a single Gaussian times a constant:
 
 $$
 \int I_a I_b = e^{-\delta^2/4s^2}\int e^{-|p - m|^2/s^2} = \pi s^2\, e^{-\delta^2/4s^2}.
@@ -434,7 +434,7 @@ $$
 
 Nothing in that loss mentions charts, manifolds or coordinates. So why should training produce a chart?
 
-Suppose training works perfectly, so $$g(e(x)) = x$$ for every $$x \in \mathcal{M}$$. If two data points share a code, $$e(x) = e(x')$$, apply $$g$$ to both sides and you get $$x = g(e(x)) = g(e(x')) = x'$$. That makes $$e$$ injective on the data, with $$g$$ undoing $$e$$ on the codes $$e(\mathcal{M})$$. Both networks are continuous, so $$e|_{\mathcal{M}}$$ is a continuous bijection whose inverse $$g$$ is also continuous. That's a homeomorphism, which is the definition of a chart. **Perfect reconstruction forces the encoder to be a chart of the data manifold, with the decoder as its inverse.**
+Suppose training works perfectly, so $$g(e(x)) = x$$ for every $$x \in \mathcal{M}$$. If two data points share a code, $$e(x) = e(x')$$, apply $$g$$ to both sides and you get $$x = g(e(x)) = g(e(x')) = x'$$. That makes $$e$$ injective on the data, with $$g$$ undoing $$e$$ on the codes $$e(\mathcal{M})$$. Both networks are continuous, so $$e\vert_{\mathcal{M}}$$ is a continuous bijection whose inverse $$g$$ is also continuous. That's a homeomorphism, which is the definition of a chart. **Perfect reconstruction forces the encoder to be a chart of the data manifold, with the decoder as its inverse.**
 
 Hold on to the words "on the data", because the rest of the series turns on them. The argument says nothing about what $$g$$ does at codes no training point maps to, or what $$e$$ does to images off $$\mathcal{M}$$.
 

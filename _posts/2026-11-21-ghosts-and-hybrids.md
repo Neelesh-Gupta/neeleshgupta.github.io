@@ -10,9 +10,11 @@ toc:
   sidebar: left
 ---
 
-**TL;DR:** Average two images' pixels and you get a ghost. On our toy data its midpoint sits exactly $$\sqrt{\pi s^2/2}$$ from the nearest real image. Average their latent codes instead and you get a hybrid, except where the decoder was never trained, where you get a confident wrong digit or a ghost of the decoder's own making. A VAE fills those holes by training the decoder on noise balls whose scale the KL pins from both sides, and ELBO surgery measures what's left over: 0.427 of 6.291 nats, and 3.7% of the prior's mass.
+Walking through latent space is one of the most familiar demos in generative modelling. You encode two examples, draw a straight line between their codes, decode every point along it, and watch one image turn smoothly into the other. When it works, the model looks as if it has understood the data. When it doesn't, the frames in the middle come out wrong, sometimes as mush and sometimes as something stranger, and nothing about the model tells you in advance which you'll get.
 
-*Assumes: [Part 1](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/what-is-latent-space/) (a latent space as a learned chart, autoencoders) and KL divergence at the level of its definition. Tested with Python 3.11.9, torch 2.13.0 (CPU) and numpy 2.3.3. All 8 cells run on a laptop CPU in about 5 minutes, and MNIST is the only download.*
+This is Part 2 of a four-part series on the geometry of latent spaces. [Part 1](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/what-is-latent-space/) described a latent space as a learned chart of the data and ended on a warning: the chart is only ever checked on the data itself. An interpolation spends almost all of its time between the data points, so this post is about that in-between space. It looks at what a decoder does there, why a plain autoencoder leaves it full of holes, and how a variational autoencoder fills them.
+
+As in Part 1, each idea comes four ways: an intuition, a picture of the geometry, the maths, and a short code cell that checks the maths on real numbers. Everything runs on a laptop CPU in about five minutes, with MNIST as the only download. You'll want Part 1's picture of latent spaces as charts and the definition of KL divergence; the rest is built here.
 
 ## Ghosts and hybrids
 
@@ -20,7 +22,7 @@ Take two Blob World images, one with the blob near the top-left corner and one w
 
 That's the trick latent spaces are famous for, and it doesn't always work. Pick the wrong pair of codes for a 2 and a 7 in an autoencoder trained on MNIST, walk between them, and the frames in the middle show a crisp 1, a digit neither end asked for, decoded from codes no training image has and drawn as confidently as any real digit.
 
-This post explains both outcomes in three steps. First, why averaging pixels always leaves the data, while averaging codes leaves it only where the latent space has holes. Second, how a variational autoencoder fills those holes; the explanation turns out to be about scale, and the reparameterisation trick has little to do with it. Third, what the filling costs, and why it stays incomplete in practice. As in Part 1, each core idea comes four ways: an intuition, a picture of the geometry, the maths, and a code cell that checks the maths.
+This post explains both outcomes in three steps. First, why averaging pixels always leaves the data, while averaging codes leaves it only where the latent space has holes. Second, how a variational autoencoder fills those holes; the explanation turns out to be about scale, and the reparameterisation trick has little to do with it. Third, what the filling costs, and why it stays incomplete in practice.
 
 ## Where Part 1 left us
 

@@ -13,6 +13,8 @@ toc:
 <style>
   /* wide display equations scroll inside their own box instead of widening the page on phones */
   mjx-container[display="true"] { display: block; overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+  /* long code and output lines wrap inside the column instead of sliding sideways */
+  article pre, article pre code { white-space: pre-wrap !important; overflow-wrap: anywhere; word-break: normal; overflow-x: hidden !important; }
 </style>
 
 If you've played with a generative model, you've probably made this demo. Take two random seeds, decode a handful of points between them, and watch one image melt into the other. The natural way to fill in the points in between is a straight line, $$(1-t)\,z_0 + t\,z_1$$, and it feels too obvious to question. It isn't. In a high-dimensional latent space that line wanders somewhere the model has never been, and in a diffusion model you can watch it happen: a clean lighthouse at each end of the walk, and coloured static in the middle.
@@ -48,13 +50,19 @@ Picture the histogram of $$\|z\|$$ as $$d$$ grows. In one dimension it's half a 
 The maths is short. $$\|z\|^2$$ is a sum of $$d$$ independent squared standard normals, which makes it a chi-squared variable with $$d$$ degrees of freedom. Each term has mean 1 and variance $$\mathbb{E}[z_j^4] - 1 = 3 - 1 = 2$$, so
 
 $$
-\|z\|^2 \sim \chi^2_d, \qquad \mathbb{E}\,\|z\|^2 = d, \qquad \operatorname{Var}\|z\|^2 = 2d.
+\begin{gathered}
+\|z\|^2 \sim \chi^2_d, \\
+\mathbb{E}\,\|z\|^2 = d, \qquad \operatorname{Var}\|z\|^2 = 2d.
+\end{gathered}
 $$
 
 By the central limit theorem, $$\|z\|^2 \approx d + \sqrt{2d}\,g$$ with $$g \sim \mathcal{N}(0, 1)$$. Take the square root and keep the first-order term (the delta method):
 
 $$
-\|z\| = \sqrt{d}\,\sqrt{1 + \sqrt{2/d}\;g} \;\approx\; \sqrt{d}\left(1 + \frac{g}{\sqrt{2d}}\right) = \sqrt{d} + \frac{g}{\sqrt{2}}.
+\begin{aligned}
+\|z\| &= \sqrt{d}\,\sqrt{1 + \sqrt{2/d}\;g} \\
+&\approx \sqrt{d}\left(1 + \frac{g}{\sqrt{2d}}\right) = \sqrt{d} + \frac{g}{\sqrt{2}}.
+\end{aligned}
 $$
 
 The radius is $$\sqrt{d}$$ and the spread around it is $$1/\sqrt{2} \approx 0.707$$, whatever $$d$$ is. The rigorous version, with tail bounds in place of a first-order expansion, is the Gaussian Annulus Theorem: for $$\beta \le \sqrt{d}$$, all but a fraction $$3e^{-c\beta^2}$$ of the mass lies within $$\beta$$ of radius $$\sqrt{d}$$, for a fixed constant $$c > 0$$ ([Blum, Hopcroft & Kannan, *Foundations of Data Science*, ch. 2](https://www.cs.cornell.edu/jeh/book.pdf)).
@@ -322,7 +330,10 @@ $$
 Setting $$\frac{d}{dr}\log p(r) = \frac{d-1}{r} - r$$ to zero puts the mode at $$r^* = \sqrt{d-1}$$, a hair inside $$\sqrt{d}$$ (by 0.022 at $$d = 512$$). Now compare the origin with a place where a typical sample lands. Under the prior $$\log p(z) = -\tfrac12\|z\|^2 + \text{const}$$, so
 
 $$
-\log p(0) - \log p(z_{\text{typical}}) = \tfrac12 \|z_{\text{typical}}\|^2 \approx \tfrac{d}{2},
+\begin{aligned}
+\log p(0) - \log p(z_{\text{typical}}) &= \tfrac12 \|z_{\text{typical}}\|^2 \\
+&\approx \tfrac{d}{2},
+\end{aligned}
 $$
 
 which is 256 nats at $$d = 512$$. The origin is $$e^{256} \approx 10^{111}$$ times denser than where samples actually go, and cell 2 still found none of 100,000 within distance 10 of it. The most probable point is atypical. Information theory calls the shell the *typical set*: the samples whose log-density is close to its average, $$-\tfrac{d}{2}\log(2\pi e)$$. Almost every sample is typical, and the single most probable point is not.
@@ -360,7 +371,10 @@ In the plane through $$z_0$$, $$z_1$$ and the origin, the endpoints sit on a cir
 For independent $$z_0, z_1 \sim \mathcal{N}(0, I)$$, the point $$z(t) = (1-t)\,z_0 + t\,z_1$$ is a linear combination of independent Gaussians, so it is Gaussian with mean 0 and covariance $$\big((1-t)^2 + t^2\big) I$$:
 
 $$
-z(t) \sim \mathcal{N}\!\big(0,\; ((1-t)^2 + t^2)\, I\big), \qquad \|z(t)\| \approx \sqrt{\big((1-t)^2 + t^2\big)\, d}.
+\begin{gathered}
+z(t) \sim \mathcal{N}\!\big(0,\; ((1-t)^2 + t^2)\, I\big), \\
+\|z(t)\| \approx \sqrt{\big((1-t)^2 + t^2\big)\, d}.
+\end{gathered}
 $$
 
 At $$t = \tfrac12$$ the variance is exactly $$\tfrac12$$. The midpoint is a sample from $$\mathcal{N}(0, I/2)$$, not from the prior, and at $$d = 512$$ its norm is about 16.0 against a shell at 22.6 with spread 0.707, roughly $$(22.6 - 16.0)/0.707 \approx 9.4$$ shell standard deviations inside. Cell 3 computes the exact chance that a genuine prior sample is that short, $$P(\chi^2_{512} \le 256)$$.
@@ -368,7 +382,10 @@ At $$t = \tfrac12$$ the variance is exactly $$\tfrac12$$. The midpoint is a samp
 The likelihood moves the other way. Since $$\log p(z) = -\tfrac12\|z\|^2 + \text{const}$$, the endpoints have $$\|z\|^2 \approx d$$ and the midpoint $$\|z\|^2 \approx d/2$$, so
 
 $$
-\log p\big(z(\tfrac12)\big) - \log p(z_0) \;\approx\; -\frac{d}{4} + \frac{d}{2} \;=\; \frac{d}{4},
+\begin{aligned}
+\log p\big(z(\tfrac12)\big) - \log p(z_0) &\approx -\frac{d}{4} + \frac{d}{2} \\
+&= \frac{d}{4},
+\end{aligned}
 $$
 
 which is 128 nats at $$d = 512$$. Per unit volume the midpoint is $$e^{128}$$ times *more* likely than either end. LERP climbs the likelihood all the way to the middle, into a region of high density where no sample ever lands. [Nalisnick et al. (2018)](https://arxiv.org/abs/1810.09136) met the same gap from the other side: deep generative models trained on CIFAR-10 give higher likelihood to SVHN, a different dataset, than to their own test images, and the authors' follow-up traced this to the difference between high density and typicality ([Nalisnick et al., 2019](https://arxiv.org/abs/1906.02994)). A high-likelihood point can be one the model would never produce.
@@ -449,7 +466,10 @@ Both LERP and SLERP produce combinations $$a\,z_0 + b\,z_1$$, so both paths lie 
 SLERP comes from computer graphics, where Shoemake (1985) used it to animate rotations, and [White (2016)](https://arxiv.org/abs/1609.04468) brought it to latent spaces for the reason in this post. With $$\Omega$$ the angle between the endpoints, $$\cos\Omega = \langle z_0, z_1\rangle / (\|z_0\|\,\|z_1\|)$$,
 
 $$
-\operatorname{slerp}(z_0, z_1; t) = \frac{\sin\big((1-t)\,\Omega\big)}{\sin\Omega}\, z_0 + \frac{\sin(t\,\Omega)}{\sin\Omega}\, z_1 .
+\begin{aligned}
+\operatorname{slerp}(z_0, z_1; t) = {} & \frac{\sin\big((1-t)\,\Omega\big)}{\sin\Omega}\, z_0 \\
+& + \frac{\sin(t\,\Omega)}{\sin\Omega}\, z_1 .
+\end{aligned}
 $$
 
 It turns at constant angular speed, and when the endpoints have equal length it keeps that length the whole way. Random seeds are about a quarter turn apart, so put $$\Omega = \pi/2$$. Then $$\sin\Omega = 1$$ and $$\sin\big((1-t)\tfrac{\pi}{2}\big) = \cos\tfrac{\pi t}{2}$$, and SLERP becomes
@@ -532,7 +552,10 @@ This pair is 88.0° apart. The paths leave the plane by at most $$1.8 \times 10^
 Diffusion models are built on the same structure, and it's where the name "variance-preserving" comes from. The forward process of a denoising diffusion model ([Ho, Jain & Abbeel, 2020](https://arxiv.org/abs/2006.11239)) noises a data point $$x_0$$ as
 
 $$
-x_t = \sqrt{\bar\alpha_t}\; x_0 + \sqrt{1 - \bar\alpha_t}\;\epsilon, \qquad \epsilon \sim \mathcal{N}(0, I),
+\begin{gathered}
+x_t = \sqrt{\bar\alpha_t}\; x_0 + \sqrt{1 - \bar\alpha_t}\;\epsilon, \\
+\epsilon \sim \mathcal{N}(0, I),
+\end{gathered}
 $$
 
 where $$\bar\alpha_t$$ falls from 1 (clean data) to nearly 0 (pure noise). The squares of the two coefficients sum to 1, as on the cos/sin path, so if $$x_0$$ has unit variance per coordinate, so does every $$x_t$$. Write $$\sqrt{\bar\alpha_t} = \cos\phi_t$$ and the forward process is a quarter turn from data to noise. The cosine schedule of [Nichol & Dhariwal (2021)](https://arxiv.org/abs/2102.09672) makes this almost literal, since its $$\bar\alpha_t$$ is a squared cosine of time.
@@ -550,7 +573,13 @@ The test here is a radius dial. Pick a direction in latent space and decode poin
 Call a latent dimension *active* if its encoder mean moves with the input. [Burda, Grosse & Salakhutdinov (2015)](https://arxiv.org/abs/1509.00519) measure this with the variance of the mean across the dataset:
 
 $$
-A_j = \operatorname{Var}_{x}\Big(\mathbb{E}_{q(z \mid x)}[z_j]\Big) = \operatorname{Var}_x\big(\mu_j(x)\big), \qquad \text{dimension } j \text{ is active if } A_j > 0.01 .
+\begin{gathered}
+\begin{aligned}
+A_j &= \operatorname{Var}_{x}\Big(\mathbb{E}_{q(z \mid x)}[z_j]\Big) \\
+&= \operatorname{Var}_x\big(\mu_j(x)\big),
+\end{aligned} \\
+\text{dimension } j \text{ is active if } A_j > 0.01 .
+\end{gathered}
 $$
 
 If $$k$$ of the $$d$$ dimensions are active, the decoder effectively sees a $$k$$-dimensional Gaussian, with its shell at $$\sqrt{k}$$ and the same 0.707 spread. LERP's midpoint still shrinks the active part by $$1/\sqrt{2}$$, but the gap is now $$\sqrt{k}\,(1 - 1/\sqrt{2}) \approx 0.29\sqrt{k}$$, which grows with the number of *active* dimensions rather than with $$d$$. For $$k = 15$$ the midpoint sits about 1.6 spreads inside the shell; for $$k = 512$$ it was 9.4. Part 2 adds a second softening. The decoder doesn't train on prior samples at all but on samples from $$q(z \mid x)$$, and because the aggregate posterior isn't the prior, the encoded means sit well inside the shell.
@@ -805,7 +834,10 @@ Transformers meet the same shell, by construction. Every GPT-2 block starts by n
 LayerNorm ([Ba, Kiros & Hinton, 2016](https://arxiv.org/abs/1607.06450)) computes $$y = (x - m\mathbf{1})/s$$ before its gain and bias, where $$m$$ is the mean of $$x$$'s $$d$$ coordinates and $$s = \sqrt{\tfrac1d \sum_i (x_i - m)^2}$$. Then
 
 $$
-\|y\|^2 = \sum_{i=1}^{d} \frac{(x_i - m)^2}{s^2} = \frac{d\, s^2}{s^2} = d, \qquad \sum_{i=1}^{d} y_i = 0 .
+\begin{gathered}
+\|y\|^2 = \sum_{i=1}^{d} \frac{(x_i - m)^2}{s^2} = \frac{d\, s^2}{s^2} = d, \\
+\sum_{i=1}^{d} y_i = 0 .
+\end{gathered}
 $$
 
 so $$\|y\| = \sqrt{d}$$ exactly, for every input. RMSNorm ([Zhang & Sennrich, 2019](https://arxiv.org/abs/1910.07467)), which most current LLMs use, skips the centring: $$y = x/\operatorname{RMS}(x)$$ with $$\operatorname{RMS}(x) = \|x\|/\sqrt{d}$$, so $$\|y\| = \sqrt{d}$$ again.

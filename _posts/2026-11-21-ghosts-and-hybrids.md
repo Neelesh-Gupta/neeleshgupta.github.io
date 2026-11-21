@@ -10,6 +10,11 @@ toc:
   sidebar: left
 ---
 
+<style>
+  /* wide display equations scroll inside their own box instead of widening the page on phones */
+  mjx-container[display="true"] { display: block; overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+</style>
+
 Walking through latent space is one of the most familiar demos in generative modelling. You encode two examples, draw a straight line between their codes, decode every point along it, and watch one image turn smoothly into the other. When it works, the model looks as if it has understood the data. When it doesn't, the frames in the middle come out wrong, sometimes as mush and sometimes as something stranger, and nothing about the model tells you in advance which you'll get.
 
 This is Part 2 of a four-part series on the geometry of latent spaces. [Part 1](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/what-is-latent-space/) described a latent space as a learned chart of the data and ended on a warning: the chart is only ever checked on the data itself. An interpolation spends almost all of its time between the data points, so this post is about that in-between space. It looks at what a decoder does there, why a plain autoencoder leaves it full of holes, and how a variational autoencoder fills them.

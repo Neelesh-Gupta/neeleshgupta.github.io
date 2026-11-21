@@ -11,6 +11,13 @@ toc:
 ---
 
 <style>
+  /* use the window's width, as in Part 1, so text, code, equations and figures fill the screen */
+  @media (min-width: 576px) {
+    .container[role="main"], .navbar .container, footer .container { max-width: min(calc(100vw - 32px), 1520px); }
+    .container[role="main"] > .row > .col-sm-3 { flex: 0 0 18%; max-width: 18%; }
+    .container[role="main"] > .row > .col-sm-9 { flex: 0 0 82%; max-width: 82%; }
+  }
+  .post-content img { max-width: min(100%, 960px) !important; }
   /* wide display equations scroll inside their own box instead of widening the page on phones */
   mjx-container[display="true"] { display: block; overflow-x: auto; overflow-y: hidden; max-width: 100%; }
   /* long code and output lines wrap inside the column instead of sliding sideways */

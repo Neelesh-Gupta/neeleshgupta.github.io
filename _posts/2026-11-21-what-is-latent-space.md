@@ -2,7 +2,7 @@
 layout: post
 title: "What is Latent Space? Everyone talks about it, no one really explains it"
 date: 2026-11-21 09:00:00+0530
-description: What a latent space actually is: a learned coordinate chart on the data manifold, worked through with intrinsic dimension, PCA, autoencoders and why a circle has to tear.
+description: "What a latent space actually is: a learned coordinate chart on the data manifold, worked through with intrinsic dimension, PCA, autoencoders and why a circle has to tear."
 tags: latent-space autoencoders manifolds pca representation-learning
 categories: machine-learning
 related_posts: false

@@ -11,8 +11,21 @@ toc:
 ---
 
 <style>
+  /* This post only: use the window's width so code, equations and figures fit without sideways scrolling. */
+  @media (min-width: 576px) {
+    .container[role="main"], .navbar .container, footer .container { max-width: min(calc(100vw - 32px), 1520px); }
+    .container[role="main"] > .row > .col-sm-3 { flex: 0 0 18%; max-width: 18%; }
+    .container[role="main"] > .row > .col-sm-9 { flex: 0 0 82%; max-width: 82%; }
+  }
+  .post-content img { max-width: min(100%, 960px) !important; }
+  .post-content p.caption { opacity: .8; max-width: 92%; margin: -.25rem auto 1.75rem; }
+  .post-content pre.highlight, .post-content pre.highlight code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .post-content pre, .post-content pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
   /* wide display equations scroll inside their own box instead of widening the page on phones */
-  mjx-container[display="true"] { display: block; overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+  .post-content mjx-container[display="true"] { display: block; overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+  @media (max-width: 575px) {
+    .post-content mjx-container[display] { font-size: 90% !important; }
+  }
 </style>
 
 Walking through latent space is one of the most familiar demos in generative modelling. You encode two examples, draw a straight line between their codes, decode every point along it, and watch one image turn smoothly into the other. When it works, the model looks as if it has understood the data. When it doesn't, the frames in the middle come out wrong, sometimes as mush and sometimes as something stranger, and nothing about the model tells you in advance which you'll get.

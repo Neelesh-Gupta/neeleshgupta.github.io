@@ -526,7 +526,13 @@ $$
 
 Read it term by term, because the next section leans on it. $$\mu_j^2$$ is a spring pulling every code toward the origin. $$\sigma_j^2 - \log\sigma_j^2 - 1$$ is zero at $$\sigma_j = 1$$ and grows on both sides of it, so it holds each code's noise near unit size: shrinking $$\sigma$$ costs $$-\log \sigma^2$$, and growing it costs $$\sigma^2$$.
 
-The reconstruction term needs a likelihood. For MNIST I use a Bernoulli on each pixel, $$\log p(x \mid z) = \sum_j x_j \log \hat{x}_j + (1 - x_j) \log(1 - \hat{x}_j)$$ with $$\hat{x} = \operatorname{sigmoid}(g(z))$$. That's minus the binary cross-entropy, which is what `binary_cross_entropy_with_logits` computes in `vae_loss`. MNIST pixels are grey levels in [0, 1] rather than bits, so strictly this needs a normalising constant, the continuous Bernoulli of [Loaiza-Ganem & Cunningham (2019)](https://arxiv.org/abs/1907.06845). Leaving it out is standard practice. It changes the reconstruction term, and through it the trained model a little, but none of the arguments below depend on it, and the KL numbers don't involve the likelihood at all. `vae_loss` returns minus the ELBO with a weight $$\beta$$ on the KL, and `beta=1` is the true ELBO.
+The reconstruction term needs a likelihood. For MNIST I use a Bernoulli on each pixel,
+
+$$
+\log p(x \mid z) = \sum_j x_j \log \hat{x}_j + (1 - x_j) \log(1 - \hat{x}_j),
+$$
+
+with $$\hat{x} = \operatorname{sigmoid}(g(z))$$. That's minus the binary cross-entropy, which is what `binary_cross_entropy_with_logits` computes in `vae_loss`. MNIST pixels are grey levels in [0, 1] rather than bits, so strictly this needs a normalising constant, the continuous Bernoulli of [Loaiza-Ganem & Cunningham (2019)](https://arxiv.org/abs/1907.06845). Leaving it out is standard practice. It changes the reconstruction term, and through it the trained model a little, but none of the arguments below depend on it, and the KL numbers don't involve the likelihood at all. `vae_loss` returns minus the ELBO with a weight $$\beta$$ on the KL, and `beta=1` is the true ELBO.
 
 > **The reparameterisation trick is a gradient estimator, not a regulariser.** To train through the expectation over $$q$$, the code samples $$z = \mu + \sigma \odot \epsilon$$ with $$\epsilon \sim \mathcal{N}(0, I)$$, so the randomness lives in $$\epsilon$$ and gradients flow through $$\mu$$ and $$\sigma$$. That's how we get gradients of the objective; it doesn't change what the objective is. If a VAE's latent space is smoother than an autoencoder's, the reason has to be in the objective, and finding it is the next section's job.
 

@@ -37,8 +37,6 @@ Here's a small experiment. I gave Qwen2.5-0.5B-Instruct twenty arithmetic word p
 
 Nothing else changed: same model, same problems, same two fields. A 0.5B model on one kind of problem can't tell you how big this effect is in your own system, but it does show which way it points, and the reason sits inside the constrained decoder. So that's where this post goes. We'll write the logit mask ourselves in about 30 lines of Python and watch what it does to the model's probabilities, with pictures, a bit of math and code you can run on a laptop.
 
-I'll assume you're comfortable with logits, softmax, autoregressive decoding, the KV cache and BPE.
-
 ## The paradox: JSON that always parses, answers that get worse
 
 If you run an LLM in production, you have probably switched on structured outputs. The engine guarantees the response matches your schema, your `json.loads` stops throwing, and a whole class of 3 a.m. pages goes away. Then someone runs the eval suite and accuracy has moved the wrong way.

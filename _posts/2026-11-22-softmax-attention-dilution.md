@@ -38,7 +38,7 @@ Paste a 300-page contract into a model with a million-token window and ask where
 
 Part of that is position: models handle the middle of a long prompt worse than its edges. This post is about a different part, a cost that softmax attention charges for every token in the context, relevant or not. Each token adds only a little, but a long context adds a lot of tokens, and once you work out the cost, a million-token window stops looking like a million tokens of memory.
 
-I'll build it up in four passes: attention as a vote, then the geometry of random vectors in high dimensions, then a short bound with a $$\ln N$$ in it, and finally a NumPy simulation you can run on a laptop in under a minute. If you know scaled dot-product attention, you're set.
+The argument builds up in four passes: attention as a vote, then the geometry of random vectors in high dimensions, then a short bound with a $$\ln N$$ in it, and finally a NumPy simulation you can run on a laptop in under a minute. If you know scaled dot-product attention, you're set.
 
 ## The paradox: million-token windows, thousand-token memory
 
@@ -46,7 +46,7 @@ Retrieval has not kept up with window size. [Liu et al. (2023)](https://arxiv.or
 
 Yet the same long-context models routinely score near-perfectly on the standard needle-in-a-haystack (NIAH) test ([Kamradt](https://github.com/gkamradt/LLMTest_NeedleInAHaystack)). [RULER (Hsieh et al., 2024)](https://arxiv.org/abs/2404.06654) put the two observations side by side: almost all the models it tested reach near-perfect accuracy on vanilla NIAH, then show large drops as the context gets longer or the task gets harder.
 
-I think much of that gap comes from one line of softmax arithmetic. A context window is *addressable* memory, in that the model can read every token. It isn't *effective* memory, because every token you add votes in the softmax denominator. To hold the relevant token's attention share constant, its logit must beat the average distractor by an amount that grows as $$\ln N$$, about 2.3 nats more for every 10× more context. By the end you should be able to:
+A likely culprit for much of that gap is one line of softmax arithmetic. A context window is *addressable* memory, in that the model can read every token. It isn't *effective* memory, because every token you add votes in the softmax denominator. To hold the relevant token's attention share constant, its logit must beat the average distractor by an amount that grows as $$\ln N$$, about 2.3 nats more for every 10× more context. By the end you should be able to:
 
 1. derive that margin bound in three lines;
 2. predict the context length at which a given needle drops below 50% attention, and check it against a simulation;
@@ -73,7 +73,7 @@ Two numbers describe the crowd, the mean distractor logit $$\mu$$ and its spread
 
 Write each logit as a length times an angle: $$s_j = \beta\cos(q, k_j)$$, where $$\beta = \lVert q\rVert\lVert k\rVert/\sqrt{d_k}$$ is the logit scale. Picture the keys as points on the unit sphere in $$\mathbb{R}^{d}$$ and the query as a direction: a key's logit is then its height along that direction, its projection onto $$q$$.
 
-For a uniformly random unit vector, symmetry makes every coordinate's square average to the same value, and the squares sum to 1, so each coordinate has variance $$1/d$$. Nearly all of the sphere's area sits in a thin band around the "equator" perpendicular to $$q$$. With $$d = 128$$, a random key's cosine with the query is roughly $$\mathcal{N}(0, 1/128)$$, so a typical projection is about $$\pm 0.09$$. Our needle, at cosine 0.5, lies far above the band.
+For a uniformly random unit vector, symmetry makes every coordinate's square average to the same value, and the squares sum to 1, so each coordinate has variance $$1/d$$. Nearly all of the sphere's area sits in a thin band around the "equator" perpendicular to $$q$$. With $$d = 128$$, a random key's cosine with the query is roughly $$\mathcal{N}(0, 1/128)$$, so a typical projection is about $$\pm 0.09$$. The needle, at cosine 0.5, lies far above the band.
 
 That gives the crowd its statistics, $$\mu = 0$$ and $$\sigma = \beta/\sqrt{d}$$, and each distractor alone is weak. The same picture holds a second, slower threat. Draw a cap around $$q$$: the set of directions within cosine $$t$$ of the query. Its share of the sphere is about $$e^{-d t^2/2}$$, so $$N$$ random keys put about $$N e^{-d t^2/2}$$ points inside it. Set that to 1 and you get, to leading order, the height of the highest distractor:
 
@@ -108,18 +108,18 @@ $$
 N^* \approx 1 + e^{\Delta s - \sigma^2/2}.
 $$
 
-A common explanation blames bounded norms: LayerNorm and weight decay supposedly cap $$\lVert q\rVert\lVert k\rVert$$, so logits can't grow with $$N$$. That claims too much. LayerNorm gains and $$W_q, W_k$$ are learned, and nothing stops a model from using large logits. The version I'd defend is about calibration. The logit scale is learned at the training length and then frozen, so a model trained on 8K-token sequences learned margins that pay the tax for $$\ln 8000$$, not for $$\ln 10^6$$. The [Qwen technical report (Bai et al., 2023, §2.5)](https://arxiv.org/abs/2309.16609) acts on the same idea: to extend context at inference, it rescales attention by a factor that depends on the ratio of the context length to the training length.
+A common explanation blames bounded norms: LayerNorm and weight decay supposedly cap $$\lVert q\rVert\lVert k\rVert$$, so logits can't grow with $$N$$. That claims too much. LayerNorm gains and $$W_q, W_k$$ are learned, and nothing stops a model from using large logits. The defensible version is about calibration. The logit scale is learned at the training length and then frozen, so a model trained on 8K-token sequences learned margins that pay the tax for $$\ln 8000$$, not for $$\ln 10^6$$. The [Qwen technical report (Bai et al., 2023, §2.5)](https://arxiv.org/abs/2309.16609) acts on the same idea: to extend context at inference, it rescales attention by a factor that depends on the ratio of the context length to the training length.
 
 ## Build it: drowning a needle in NumPy
 
-The simulation tests every number above, using the haystack from the geometry section: `D = 128` (the head dimension $$d$$), `BETA = 20` (the logit scale $$\beta$$), and a needle at cosine `RHO = 0.5`. That gives a needle logit $$s^* = \beta\rho = 10$$, a distractor spread $$\sigma = 20/\sqrt{128} = 1.77$$, and a predicted drowning length of $$1 + e^{10 - 1.56} \approx 4{,}600$$ tokens, in the middle of the 100 to 100,000 range we sweep.
+The simulation tests every number above, using the haystack from the geometry section: `D = 128` (the head dimension $$d$$), `BETA = 20` (the logit scale $$\beta$$), and a needle at cosine `RHO = 0.5`. That gives a needle logit $$s^* = \beta\rho = 10$$, a distractor spread $$\sigma = 20/\sqrt{128} = 1.77$$, and a predicted drowning length of $$1 + e^{10 - 1.56} \approx 4{,}600$$ tokens, in the middle of the 100 to 100,000 range the simulation sweeps.
 
 Each simplification gives something up:
 
 - Keys are i.i.d. uniform on the sphere rather than learned, so there is no real key structure or anisotropy.
 - One head and one query means no redundancy across heads and layers, which real models use to recover.
 - With no positions there is no RoPE and no attention sink, which is why the U-shape is out of scope.
-- I set $$\beta$$ by hand, as a stand-in for a scale the model would have learned at its training length.
+- $$\beta$$ is set by hand, as a stand-in for a scale the model would have learned at its training length.
 
 Cell 1 pins the two dependencies, fixes the seed and defines those three constants.
 

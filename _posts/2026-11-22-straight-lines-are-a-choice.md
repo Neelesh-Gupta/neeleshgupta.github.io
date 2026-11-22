@@ -59,10 +59,11 @@ Zoom in far enough on one point $$z$$ and the decoder is nearly linear. A tiny c
 In symbols, it's a first-order Taylor expansion. With $$J(z) = \partial g / \partial z \in \mathbb{R}^{D \times d}$$ the decoder's Jacobian,
 
 $$
-\begin{gathered}
-g(z + dz) \approx g(z) + J(z)\,dz \
-\Longrightarrow\quad \|g(z + dz) - g(z)\|^2 \approx dz^\top J(z)^\top J(z)\, dz = dz^\top G(z)\, dz.
-\end{gathered}
+\begin{aligned}
+g(z + dz) &\approx g(z) + J(z)\,dz \\
+\|g(z + dz) - g(z)\|^2 &\approx dz^\top J(z)^\top J(z)\, dz \\
+&= dz^\top G(z)\, dz.
+\end{aligned}
 $$
 
 $$G(z) = J(z)^\top J(z)$$ is a $$d \times d$$ symmetric matrix called the **pull-back metric**: ordinary Euclidean distance in pixel space, pulled back through the decoder into latent coordinates. That's the ruler. A path $$\gamma: [0, 1] \to \mathbb{R}^d$$ through the latent now has a length measured in the data,
@@ -89,8 +90,9 @@ Blob World is where we can work out the true ruler by hand. Each image is a blob
 
 $$
 \begin{aligned}
-G_{xx} &= \sum_p \Big(\frac{x - c_x}{s^2}\Big)^2 I_c(p)^2 \
-&\approx \frac{1}{s^4} \int u^2 e^{-u^2/s^2}\, du \int e^{-w^2/s^2}\, dw \
+G_{xx} &= \sum_p \Big(\frac{x - c_x}{s^2}\Big)^2 I_c(p)^2 \\
+&\approx \frac{1}{s^4} \int u^2 e^{-u^2/s^2}\, du \\
+&\qquad \times \int e^{-w^2/s^2}\, dw \\
 &= \frac{1}{s^4}\cdot\frac{s^3\sqrt{\pi}}{2}\cdot s\sqrt{\pi} = \frac{\pi}{2}.
 \end{aligned}
 $$
@@ -455,8 +457,9 @@ On Blob World we can go a step further and predict the picture. Suppose the lear
 
 $$
 \begin{aligned}
-G_{\text{learned}}(z) &= J_h^\top J_R^\top J_R J_h \
-&= J_h(z)^\top G_{\text{true}}\, J_h(z) = \frac{\pi}{2}\, J_h(z)^\top J_h(z).
+G_{\text{learned}}(z) &= J_h^\top J_R^\top J_R J_h \\
+&= J_h(z)^\top G_{\text{true}}\, J_h(z) \\
+&= \frac{\pi}{2}\, J_h(z)^\top J_h(z).
 \end{aligned}
 $$
 
@@ -550,7 +553,7 @@ Computing it is easy. Chop the path into $$n$$ segments, $$z_0 = z_a, z_1, \dots
 
 $$
 \begin{aligned}
-E &\approx \frac{1}{2}\sum_{i=0}^{n-1} \frac{1}{n}\, n^2 \|g(z_{i+1}) - g(z_i)\|^2 \
+E &\approx \frac{1}{2}\sum_{i=0}^{n-1} \frac{1}{n}\, n^2 \|g(z_{i+1}) - g(z_i)\|^2 \\
 &= \frac{n}{2}\sum_{i=0}^{n-1} \|g(z_{i+1}) - g(z_i)\|^2 .
 \end{aligned}
 $$
@@ -729,8 +732,9 @@ Cell 2's inequality says what a rubber band will do here. On the manifold, the o
 
 $$
 \begin{aligned}
-\mathbb{E}_\epsilon\big[J^\top J\big] &= J_\mu^\top J_\mu + J_\sigma^\top \mathbb{E}\big[\operatorname{diag}(\epsilon)^2\big] J_\sigma \
-&\quad + (\text{terms linear in } \epsilon) \
+\mathbb{E}_\epsilon\big[J^\top J\big] &= J_\mu^\top J_\mu \\
+&\quad + J_\sigma^\top \mathbb{E}\big[\operatorname{diag}(\epsilon)^2\big] J_\sigma \\
+&\quad + (\text{terms linear in } \epsilon) \\
 &= J_\mu^\top J_\mu + J_\sigma^\top J_\sigma,
 \end{aligned}
 $$
@@ -741,7 +745,8 @@ For $$\sigma(z)$$ the cell follows the paper's recipe, an RBF network on the pre
 
 $$
 \begin{gathered}
-\beta(z) = W\, v(z) + \zeta, \qquad v_k(z) = \exp\!\big(-\lambda_k \|z - c_k\|^2\big), \
+\beta(z) = W\, v(z) + \zeta, \\
+v_k(z) = \exp\!\big(-\lambda_k \|z - c_k\|^2\big), \\
 \sigma(z) = \beta(z)^{-1/2}.
 \end{gathered}
 $$

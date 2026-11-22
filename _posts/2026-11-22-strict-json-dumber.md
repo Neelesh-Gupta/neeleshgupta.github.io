@@ -57,7 +57,7 @@ By the end of the first code cell, a model that put 90% of its probability on he
 
 Engines such as Outlines, vLLM, llama.cpp and XGrammar compile a JSON schema (or a regex, or a grammar) into an automaton over tokens: a finite state machine for regular constraints, as in [Willard & Louf (2023)](https://arxiv.org/abs/2307.09702), or a pushdown automaton for full context-free grammars, as in llama.cpp's GBNF and XGrammar. An FSM is enough for everything in this post. At decoding step $$t$$ the FSM is in a state $$s_t$$ that records how much of the JSON has been written. From $$s_t$$ it computes $$V_{\text{valid}}(s_t)$$: the tokens that keep the output a prefix of some valid document.
 
-Before sampling, the engine edits the logit vector $$\mathbf{l} \in \mathbb{R}^{|V|}$$:
+Before sampling, the engine edits the logit vector $$\mathbf{l} \in \mathbb{R}^{\lvert V\rvert}$$:
 
 $$
 l'_i = \begin{cases} l_i & i \in V_{\text{valid}}(s_t) \\ -\infty & \text{otherwise} \end{cases}
@@ -180,7 +180,7 @@ $$
 
 which is exactly the masked distribution. For a single step, masking is conditioning on validity. Two things follow. Ratios among valid tokens survive: $$p_{\text{true}} / p_{\text{false}} = 0.06/0.04 = 1.5$$ before and $$0.60/0.40 = 1.5$$ after. And $$M_t$$ is divided out, so the output keeps no record of how much belief sat outside the valid set.
 
-Geometry shows what gets lost. A next-token distribution is a point on the probability simplex $$\Delta^{|V|-1}$$ (non-negative coordinates summing to 1), and the valid tokens span one face $$F$$ of it. Masking zeroes the invalid coordinates and rescales:
+Geometry shows what gets lost. A next-token distribution is a point on the probability simplex $$\Delta^{\lvert V\rvert-1}$$ (non-negative coordinates summing to 1), and the valid tokens span one face $$F$$ of it. Masking zeroes the invalid coordinates and rescales:
 
 $$
 q = \frac{\Pi_F\, p}{\mathbf{1}^\top \Pi_F\, p},
@@ -418,7 +418,7 @@ The two agree only if $$\prod_t M_t(y_{<t}) = Z$$ for every valid $$y$$, meaning
 
 Getting the global conditional right needs lookahead, weighting each prefix by the probability that it can still end in a valid output. [Park et al. (2024)](https://arxiv.org/abs/2405.21047) call the exact target grammar-aligned decoding and show that standard grammar-constrained decoding can distort the distribution; their algorithm, ASAp, uses earlier samples to over-approximate those expected futures and refines them as it keeps sampling. Rung 1 is the one-step special case. With a single step there is no future to look ahead to, and masking is exact.
 
-![A two-step decoding tree whose branch thicknesses and leaf probabilities morph from masked decoding (trap sequence A x at 0.70, 3.70 times too likely) to the true conditional P(y | valid) (A x at 0.19, B branch growing to 0.24, 0.24, 0.32)]({{ '/assets/blog/strict-json-dumber/local-vs-global-tree.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
+![A two-step decoding tree whose branch thicknesses and leaf probabilities morph from masked decoding (trap sequence A x at 0.70, 3.70 times too likely) to the true conditional P(y given valid) (A x at 0.19, B branch growing to 0.24, 0.24, 0.32)]({{ '/assets/blog/strict-json-dumber/local-vs-global-tree.gif' | relative_url }}){: .img-fluid .rounded .z-depth-1 style="max-width: 100%; height: auto; display: block; margin: 1rem auto;" data-zoomable="true"}
 
 *How to read it: the model writes two tokens. First it picks A (70%) or B (30%), then a second token. The red dashed branch, A then y, is not allowed by the format. Thicker lines mean more probability. The animation moves between two versions of the tree: what masked decoding actually produces, where A x comes out 70% of the time, and what we want (the model's own odds, keeping only the allowed outputs), where A x gets 19% and the three B sequences share the rest. Masking picked A before it could see that A almost always ends somewhere illegal, then pushed it into A's only legal ending.*
 

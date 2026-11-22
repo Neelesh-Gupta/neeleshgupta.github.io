@@ -5,4 +5,4 @@ inline: true
 related_posts: false
 ---
 
-LATEST BLOG: [Averaging pixels makes a ghost. Averaging latents makes a hybrid, until it doesn't.](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/ghosts-and-hybrids/)
+BLOG: [Averaging pixels makes a ghost. Averaging latents makes a hybrid, until it doesn't.](https://neelesh-gupta.github.io/neeleshgupta.github.io/blog/2026/ghosts-and-hybrids/)

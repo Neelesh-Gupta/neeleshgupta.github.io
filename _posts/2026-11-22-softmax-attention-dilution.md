@@ -10,6 +10,30 @@ toc:
   sidebar: left
 ---
 
+<style>
+  /* use the window's width, as in the other posts, so text, code, equations and figures fill the screen */
+  @media (min-width: 576px) {
+    .container[role="main"], .navbar .container, footer .container { max-width: min(calc(100vw - 32px), 1520px); }
+    .container[role="main"] > .row > .col-sm-3 { flex: 0 0 18%; max-width: 18%; }
+    .container[role="main"] > .row > .col-sm-9 { flex: 0 0 82%; max-width: 82%; }
+  }
+  .post-content img { max-width: min(100%, 960px) !important; }
+  /* wide display equations scroll inside their own box instead of widening the page on phones */
+  mjx-container[display="true"] { display: block; overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+  @media (max-width: 575px) {
+    .post-content mjx-container[display] { font-size: 90% !important; }
+  }
+  /* long code and output lines wrap inside the column instead of sliding sideways */
+  article pre, article pre code { white-space: pre-wrap !important; overflow-wrap: anywhere; word-break: normal; overflow-x: hidden !important; }
+  /* the comparison table fits the column; its cells wrap */
+  .post-content table { width: 100%; table-layout: auto; }
+  .post-content table td, .post-content table th { overflow-wrap: anywhere; }
+  @media (max-width: 575px) {
+    .post-content table { font-size: 82%; }
+    .post-content table td, .post-content table th { padding: .4rem .3rem; }
+  }
+</style>
+
 Paste a 300-page contract into a model with a million-token window and ask where the termination clause is. The whole document fits, with plenty of room to spare. Sometimes the answer comes back confident, well written, and about the wrong clause.
 
 Part of that is position: models handle the middle of a long prompt worse than its edges. This post is about a different part, a cost that softmax attention charges for every token in the context, relevant or not. Each token adds only a little, but a long context adds a lot of tokens, and once you work out the cost, a million-token window stops looking like a million tokens of memory.
